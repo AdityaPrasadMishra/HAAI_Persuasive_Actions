@@ -1,0 +1,5 @@
+(MOVE_RIGHT A B)  -> Fetch_box(Human and Robot)
+(MOVE_RIGHT B C)  -> Fetch_box(Human and Robot)
+(FETCH_BOX C)  -> Fetch_box(Human and Robot)
+(MOVE_BOTTOM C F)  -> Unfetch_box(Human and Robot)
+(UNFETCH_BOX F)  -> Unfetch_box(Human and Robot)
