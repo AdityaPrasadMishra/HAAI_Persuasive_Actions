@@ -3,6 +3,7 @@ import numpy as np
 from numpy import array
 from random import randint
 from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import SGDRegressor
 
 
 # TODO: Do this via online learning
@@ -26,17 +27,18 @@ from sklearn.linear_model import LinearRegression
 #   waitForNextTimestep                                             #
 #####################################################################
 
-puddle_dim = 1
+puddle_dim = 5
+goal_dim = 2
 
 #####################################################################
-# is_in_puddle(min_x, max_x, min_y, max_y)
+# is_in_location(min_x, max_x, min_y, max_y)
 # -------------------------------------------------------------------
 #####################################################################
-def is_in_puddle(x, y, puddle):
-    min_x = puddle[0][0]
-    max_x = puddle[3][0]
-    min_y = puddle[3][1]
-    max_y = puddle[0][1]
+def is_in_location(x, y, location):
+    min_x = location[0][0]
+    max_x = location[3][0]
+    min_y = location[3][1]
+    max_y = location[0][1]
 
     if min_x <= x <= max_x:
         if min_y <= y <= max_y:
@@ -75,8 +77,7 @@ def get_puddles(pd):
 # -------------------------------------------------------------------
 #####################################################################
 def get_goal():
-    dim = 3
-    dist = 0.1 * dim
+    dist = 0.1 * goal_dim
 
     rd = (1, 1-dist)
     ld = (1-dist, 1-dist)
@@ -98,13 +99,13 @@ def get_best_action(data):
     x, y, f1, f2 = data
     puddle_1, puddle_2 = get_puddles(puddle_dim)
 
-    if f1 and is_in_puddle(x, y, puddle_1):
+    if f1 and is_in_location(x, y, puddle_1):
         return 2
 
-    if f2 and is_in_puddle(x, y, puddle_2):
+    if f2 and is_in_location(x, y, puddle_2):
         return 1
 
-    return 0
+    return randint(1, 4)
 
 
 #####################################################################
@@ -124,50 +125,66 @@ def generate_init_data(n_data):
 
 
 #####################################################################
-# get_human_reinf_from_prev_step(data):
+# get_human_reinf_from_prev_step(data)
 # -------------------------------------------------------------------
 # Description: Tries to model a human reinforcement policy
 # Returns: (-1 if in puddle, 0 if not in puddle, 1 if in goal)
 #####################################################################
 def get_human_reinf_from_prev_step(data):
-    if not data:
-        return 0
+    # if not data:
+    #     return 0
+
+    puddle_1, puddle_2 = get_puddles(puddle_dim)
+    goal = get_goal()
 
     x, y, f1, f2, a = data
 
     # If agent is in a puddle
-    if (f1 and is_in_puddle(x, y, puddle_1)) \
-            or (f2 and is_in_puddle(x, y, puddle_2)):
+    if (f1 and is_in_location(x, y, puddle_1)) \
+            or (f2 and is_in_location(x, y, puddle_2)):
         return -1
+
+    # If agent is in the goal
+    elif (is_in_location(x, y, goal)):
+        return 1
 
     else:
         return 0
 
-
+#####################################################################
+# tamer_algorithm(stepSize)
+# -------------------------------------------------------------------
+# Description: Implementation of the TAMER algorithm
+#####################################################################
 def tamer_algorithm(stepSize):
-    # while True:
-    # h = getHumanReinfSincePreviousTimeStep(data)
 
-    pass
+    random.seed(0)
 
+    X_train = generate_init_data(50)
+    y_train = np.array([get_human_reinf_from_prev_step(row) for row in X_train])
 
-generate_init_data(50)
+    # Fit the values from the data
+    reg = SGDRegressor(max_iter=1000).fit(X_train, y_train)
+
+    # s = [x, y, p1, p2, a]
+    # Up: 1, Right: 2, Down: 3, Left: 4
+    init_state = [0.1, 0.1, 1, 0, 1]
+    s = init_state
+
+    while True:
+        np_s = np.array([s])
+
+        h = get_human_reinf_from_prev_step(s)
+        print(reg.predict(np_s))
+        if h != 0:
+            error = h - reg.predict(np_s)
+            print(error)
+            # Online learning:
+            # TODO: How to make it fit for the error instead?
+            reg.partial_fit(np_s, h)
+        # Get next state (TODO: create function to move?)
+
 
 if __name__ == '__main__':
     tamer_algorithm(stepSize=1)
 
-# Up: 1, Right: 2, Down: 3, Left: 4
-# xmpl_X = np.array([
-#     [0.2, 0.8, 1, 0, 2],
-#     [0.25, 0.75, 1, 0, 2],
-#     [0.8, 0.8, 0, 0, 1],
-#     [0.7, 0.7, 0, 0, 1],
-#     [0.2, 0.2, 1, 0, 1],
-#     [0.2, 0.8, 1, 0, 1]])
-#
-# xmpl_Y = np.array([-1, -1, 1, 1, 0, 0])
-# reg = LinearRegression().fit(xmpl_X, xmpl_Y)
-# test_X = np.array([[0.2, 0.8, 0, 1, 2]])
-#
-# data = [0.25, 0.75, 1, 0]
-# print(get_best_action(data))
