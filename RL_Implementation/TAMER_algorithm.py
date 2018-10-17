@@ -15,7 +15,6 @@ from sklearn.linear_model import SGDRegressor
 # Vector of features f init to 0                                    #
 # f = 0                                                             #
 # while true:                                                       #
-# h = randint(-1, 1) # TODO: Change it to come from a function      #
 # h = getHumanReinfbasedOnFeatures -> random for the moment         #
 # if h != 0:                                                        #
 #      error = h - PredictionOfTheModelGivenFeatures(f)             #
@@ -96,6 +95,8 @@ def get_goal():
 # Returns: best action and whether or not the agent is in a puddle
 #####################################################################
 def get_best_action(data):
+    data = list(data)
+
     x, y, f1, f2 = data
     puddle_1, puddle_2 = get_puddles(puddle_dim)
 
@@ -131,8 +132,7 @@ def generate_init_data(n_data):
 # Returns: (-1 if in puddle, 0 if not in puddle, 1 if in goal)
 #####################################################################
 def get_human_reinf_from_prev_step(data):
-    # if not data:
-    #     return 0
+    data = list(data)
 
     puddle_1, puddle_2 = get_puddles(puddle_dim)
     goal = get_goal()
@@ -156,7 +156,7 @@ def get_human_reinf_from_prev_step(data):
 # -------------------------------------------------------------------
 # Description: Implementation of the TAMER algorithm
 #####################################################################
-def tamer_algorithm(stepSize):
+def tamer_algorithm():
 
     random.seed(0)
 
@@ -168,23 +168,28 @@ def tamer_algorithm(stepSize):
 
     # s = [x, y, p1, p2, a]
     # Up: 1, Right: 2, Down: 3, Left: 4
-    init_state = [0.1, 0.1, 1, 0, 1]
-    s = init_state
+    s = [0.1, 0.1, 1, 0]
+    a = get_best_action(s)
 
-    while True:
-        np_s = np.array([s])
+    s.append(a)
+    np_s = np.array([s])
 
+    for i in range(100):
+
+        # Get the human reward:
         h = get_human_reinf_from_prev_step(s)
-        print(reg.predict(np_s))
+
+        # We assume that the human model is optimal
         if h != 0:
-            error = h - reg.predict(np_s)
-            print(error)
             # Online learning:
-            # TODO: How to make it fit for the error instead?
-            reg.partial_fit(np_s, h)
-        # Get next state (TODO: create function to move?)
+            print(reg.predict(np_s))
+            reg.partial_fit(np_s, np.array([h]))
+
+        # Get the next state based on action (random for the moment)
+        np_s = generate_init_data(1)
+        s = list(np_s[0])
 
 
 if __name__ == '__main__':
-    tamer_algorithm(stepSize=1)
+    tamer_algorithm()
 
