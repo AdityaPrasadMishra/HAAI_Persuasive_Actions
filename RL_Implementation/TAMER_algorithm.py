@@ -6,8 +6,6 @@ from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import SGDRegressor
 
 
-# TODO: Do this via online learning
-
 #####################################################################
 # Initialize reinforcement model with the stepSize                  #
 # Vector of states s init to 0                                      #
@@ -45,7 +43,6 @@ def is_in_location(x, y, location):
     return False
 
 
-# TODO: This can be shortened
 #####################################################################
 # create_puddles(pd)
 # -------------------------------------------------------------------
@@ -113,7 +110,7 @@ def get_best_action(data):
 # generate_init_data(n_data)
 # -------------------------------------------------------------------
 #####################################################################
-def generate_init_data(n_data):
+def generate_data(n_data):
     data = []
     for i in range(n_data):
         x, y = random.uniform(0, 1), random.uniform(0, 1)
@@ -160,7 +157,7 @@ def tamer_algorithm():
 
     random.seed(0)
 
-    X_train = generate_init_data(50)
+    X_train = generate_data(50)
     y_train = np.array([get_human_reinf_from_prev_step(row) for row in X_train])
 
     # Fit the values from the data
@@ -186,7 +183,7 @@ def tamer_algorithm():
             reg.partial_fit(np_s, np.array([h]))
 
         # Get the next state based on action (random for the moment)
-        np_s = generate_init_data(1)
+        np_s = generate_data(1)
         s = list(np_s[0])
 
 
