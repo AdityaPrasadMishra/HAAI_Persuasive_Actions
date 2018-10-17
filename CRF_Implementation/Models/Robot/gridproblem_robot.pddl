@@ -1,41 +1,27 @@
 (define (problem GRID_DOMAIN_FOR_HAAI_prob01)
 (:domain GRID_DOMAIN_FOR_HAAI)
 (:objects
-a b c d e f g h i - location
+    x0 x1 x2 - xdim
+    y0 y1 y2 - ydim
 )
 (:init
-    (current a)
-    (right a b)
-    (right b c)
-    (right d e)
-    (right e f)
-    (right g h)
-    (right h i)
-    (left c b)
-    (left b a)
-    (left f e)
-    (left e d)
-    (left i h)
-    (left h g)
-    (top d a)
-    (top g d)
-    (top e b)
-    (top h e)
-    (top f c)
-    (top i f)
-    (bottom a d)
-    (bottom d g)
-    (bottom b e)
-    (bottom e h)
-    (bottom c f)
-    (bottom f i)
-    (box c)
-    (unloadbox f)
+    (current x0 y0)
+    (righty y0 y1)
+    (righty y1 y2)
+    (lefty y2 y1)
+    (lefty y1 y0)
+    (bottomx x2 x1)
+    (bottomx x1 x0)
+    (topx x0 x1)
+    (topx x1 x2)
+    (box x0 y2)
+    (unloadbox x1 y2)
 )
-;;a b c
-;;d e f
-;;g h i
+
+;;20 21 22
+;;10 11 12
+;;00 01 02
 (:goal
-(and(unfetched_box)(observed d))
+(and(unfetched_box)(observed x2 y0))
 )
 )
