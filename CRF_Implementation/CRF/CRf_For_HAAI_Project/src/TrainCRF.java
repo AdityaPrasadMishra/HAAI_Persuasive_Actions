@@ -185,7 +185,7 @@ public class TrainCRF {
 	         *   so we do not need to test that it is a file.
 	         */
 	        public boolean accept(File file) {
-	            return file.toString().endsWith(".txt");
+	            return file.toString().startsWith("fetch");
 	        }
 	    }
 

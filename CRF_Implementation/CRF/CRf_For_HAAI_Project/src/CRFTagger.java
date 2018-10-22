@@ -6,6 +6,7 @@
    information, see the file `LICENSE' included with this distribution. */
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -40,6 +41,7 @@ import cc.mallet.fst.TransducerEvaluator;
 import cc.mallet.fst.TransducerTrainer;
 import cc.mallet.fst.ViterbiWriter;
 import cc.mallet.pipe.Pipe;
+import cc.mallet.pipe.iterator.FileIterator;
 import cc.mallet.pipe.iterator.LineGroupIterator;
 
 import cc.mallet.util.CommandOption;
@@ -62,6 +64,7 @@ public class CRFTagger {
 
 	private static Logger logger =
 		MalletLogger.getLogger(CRFTagger.class.getName());
+
 
 	/**
 	 * No <code>CRFTagger</code> objects allowed.
@@ -207,6 +210,10 @@ public class CRFTagger {
 	private static final CommandOption.Boolean trainOption = new CommandOption.Boolean
 		(CRFTagger.class, "train", "true|false", true, false,
 		 "Whether to train", null);
+	
+	private static final CommandOption.Boolean directoryOption = new CommandOption.Boolean
+			(CRFTagger.class, "directory", "true|false", true, false,
+			 "Whether to use directory for train and test", null);
 
 	private static final CommandOption.String testOption = new CommandOption.String
 		(CRFTagger.class, "test", "lab or perclass or seg=start-1.continue-1,...,start-n.continue-n",
@@ -280,7 +287,6 @@ public class CRFTagger {
 	private static final CommandOption.Integer numThreads = new CommandOption.Integer
 		(CRFTagger.class, "threads", "INTEGER", true, 1,
 		 "Number of threads to use for CRF training.", null);
-	
 	private static final CommandOption.List commandOptions =
 		new CommandOption.List (
 								"Training, testing and running a generic tagger.",
@@ -289,6 +295,7 @@ public class CRFTagger {
 									trainOption,
 									iterationsOption,
 									testOption,
+									directoryOption,
 									trainingFractionOption,
 									modelOption,
 									randomSeedOption,
@@ -304,7 +311,7 @@ public class CRFTagger {
 									cacheSizeOption,
 									includeInputOption,
 									featureInductionOption,
-									numThreads
+									numThreads,
 								});
 
 	/**
@@ -529,17 +536,31 @@ public class CRFTagger {
 	 */
 	public static void main (String[] args) throws Exception {
 
-		Reader trainingFile = null, testFile = null;
-		InstanceList trainingData = null, testData = null;
+		Reader trainingFile = null, testFile = null, testFileValidator = null;
+		File [] trainingDir = null, testDir = null;
+		InstanceList trainingData = null, testData = null, testFileValidatorData = null;
 		int numEvaluations = 0;
 		int iterationsBetweenEvals = 16;
 		int restArgs = commandOptions.processOptions(args);
+		System.out.print(restArgs);
 
 		if (restArgs == args.length) {
 			commandOptions.printUsage(true);
 			throw new IllegalArgumentException("Missing data file(s)");
 		}
 
+		if(directoryOption.value) {
+			if (trainOption.value) {
+				trainingDir = new File(args[restArgs]).listFiles();
+				if (testOption.value != null && restArgs < args.length - 1) {
+					testDir = new File[]{new File(args[restArgs + 1])};
+				}
+			}
+			else {
+				testDir = new File(args[restArgs]).listFiles();
+			}
+			
+		}else{
 		if (trainOption.value) {
 			trainingFile = new FileReader(new File(args[restArgs]));
 			if (testOption.value != null && restArgs < args.length - 1) {
@@ -548,6 +569,7 @@ public class CRFTagger {
 		}
 		else {
 			testFile = new FileReader(new File(args[restArgs]));
+		}
 		}
 
 		Pipe p = null;
@@ -571,6 +593,69 @@ public class CRFTagger {
 		}
 
 
+		if(directoryOption.value) {
+			if (trainOption.value) {
+				p.setTargetProcessing(true);
+				trainingData = new InstanceList(p);
+				 if (trainingDir != null) {
+					    for (File child : trainingDir) {
+							trainingFile = new FileReader(child);	
+							trainingData.addThruPipe(new LineGroupIterator(trainingFile,
+									   Pattern.compile("^\\s*$"), true));
+					    }
+					    }
+
+				logger.info("Number of features in training data: "+p.getDataAlphabet().size());
+
+				if (testOption.value != null) {
+					if (testFile != null) {
+						testData = new InstanceList(p);
+						trainingData.addThruPipe(new FileIterator(testDir,
+		                         new TxtFilter(),
+		                         FileIterator.LAST_DIRECTORY));
+					}
+					else {
+						Random r = new Random (randomSeedOption.value);
+						InstanceList[] trainingLists =
+							trainingData.split(r, new double[] {trainingFractionOption.value,
+																1 - trainingFractionOption.value});
+						trainingData = trainingLists[0];
+						testData = trainingLists[1];
+					}
+				}
+			}
+			else if (testOption.value != null) {
+				p.setTargetProcessing(true);
+				testData = new InstanceList(p);
+				testData.addThruPipe(new FileIterator(testDir,
+                        new TxtFilter(),
+                        FileIterator.LAST_DIRECTORY));
+			}
+			else {
+				p.setTargetProcessing(false);
+				testData = new InstanceList(p);
+				testFileValidatorData  = new InstanceList(p);
+				 if (testDir != null) {
+				        String cwd = System.getProperty("user.dir");
+				        System.out.println("Current working directory : " + cwd);
+					    for (File child : testDir) {
+					    	String firstnameresult = child.getName().split("_test")[0];
+					    	String actualnameresult = firstnameresult +"_result";
+					    	File childResult = new File("DATA/TEST/"+ actualnameresult);
+							testFile = new FileReader(child);	
+							testData.addThruPipe(new LineGroupIterator(testFile,
+									   Pattern.compile("^\\s*$"), true));
+							testFileValidator = new FileReader(childResult);
+							testFileValidatorData.addThruPipe(new LineGroupIterator(testFileValidator,
+									   Pattern.compile("^\\s*$"), true));
+						
+					    }
+				 }					
+			}
+			
+		}
+		else {	
+		
 		if (trainOption.value) {
 			p.setTargetProcessing(true);
 			trainingData = new InstanceList(p);
@@ -607,6 +692,7 @@ public class CRFTagger {
 				testData.addThruPipe(
 									 new LineGroupIterator(testFile,
 														   Pattern.compile("^\\s*$"), true));
+		}
 		}
 		logger.info ("Number of predicates: "+p.getDataAlphabet().size());
     
@@ -686,8 +772,12 @@ public class CRFTagger {
 			}
 			else {
 				boolean includeInput = includeInputOption.value();
+				System.out.println(testData.size());
+				int counter = 0;
+				int wrongpred = 0;
 				for (int i = 0; i < testData.size(); i++) {
 					Sequence input = (Sequence)testData.get(i).getData();
+					Sequence result = (Sequence)testFileValidatorData.get(i).getData();
 					Sequence[] outputs = apply(crf, input, nBestOption.value);
 					int k = outputs.length;
 					boolean error = false;
@@ -707,15 +797,44 @@ public class CRFTagger {
 								FeatureVector fv = (FeatureVector)input.get(j);
 								buf.append(fv.toString(true));                
 							}
+							String actualresult = result.get(j).toString();
+							if (!actualresult.trim().equals(buf.toString().trim()))
+							{
+								wrongpred+=1;
+								System.out.println("Wrong Prediction");
+								System.out.println("actual result :"+ actualresult);								
+							}
 							System.out.println(buf.toString());
+							counter +=1;
 						}
 						System.out.println();
 					}
 				}
+				System.out.println(counter);
+				System.out.println(wrongpred);
+				float Testaccuarcy =  ((float)(counter - wrongpred)/(float)counter)*100;
+				System.out.println("Test Accuracy "+ Testaccuarcy);
 			}
 		}
-
+		
+		
 		if (trainingFile != null) { trainingFile.close(); }
 		if (testFile != null) { testFile.close(); }
 	}
+
+
+
+	static class TxtFilter implements FileFilter {
+
+        /** Test whether the string representation of the file 
+         *   ends with the correct extension. Note that {@ref FileIterator}
+         *   will only call this filter if the file is not a directory,
+         *   so we do not need to test that it is a file.
+         */
+        public boolean accept(File file) {
+        	System.out.println("here01");
+            return file.toString().endsWith("_test");
+        }
+    }
 }
+
