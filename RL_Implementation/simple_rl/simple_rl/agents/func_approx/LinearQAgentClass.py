@@ -17,7 +17,7 @@ class LinearQAgent(QLearningAgent):
     QLearningAgent with a linear function approximator for the Q Function.
     '''
 
-    def __init__(self, actions, num_features, rand_init=True, name="Linear-Q", alpha=0.2, gamma=0.99, epsilon=0.2, explore="uniform", rbf=False, anneal=True):
+    def __init__(self, actions, num_features, rand_init=True, name="Linear-Q", alpha=0.2, gamma=0.99, epsilon=0.2, explore="uniform", rbf=True, anneal=True):
         name = name + "-rbf" if rbf else name
         QLearningAgent.__init__(self, actions=list(actions), name=name, alpha=alpha, gamma=gamma, epsilon=epsilon, explore=explore, anneal=anneal)
         self.num_features = num_features

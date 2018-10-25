@@ -6,7 +6,9 @@ import srl_example_setup
 
 
 from simple_rl.agents import QLearningAgent, RandomAgent
+from simple_rl.agents.ModQLearningAgentClass import ModQLearningAgent
 from simple_rl.agents.func_approx.LinearQAgentClass import LinearQAgent
+from simple_rl.agents.func_approx.GradientBoostingAgentClass import GradientBoostingAgent
 from simple_rl.tasks import GridWorldMDP, GridWorldState
 from simple_rl.run_experiments import run_single_agent_on_mdp
 # Two Puddles
@@ -25,8 +27,9 @@ from simple_rl.tasks.puddle.PuddleMDPClass4 import PuddleMDP4
 class PUDDLER:
     def __init__(self):
         self.base_human_model = PuddleMDP()
-        self.base_agent = LinearQAgent(actions=self.base_human_model.get_actions(),num_features=2, epsilon=0.5)
-        run_single_agent_on_mdp(self.base_agent, self.base_human_model, episodes=1000, steps=100, verbose=True)
+        self.base_agent = ModQLearningAgent(actions=self.base_human_model.get_actions(), epsilon=0.5, anneal=True)
+        run_single_agent_on_mdp(self.base_agent, self.base_human_model, episodes=10000, steps=60, verbose=True)
+        print ("Q func", self.base_agent.q_func)
         self.test_run = True
 
         if self.test_run:
@@ -108,4 +111,9 @@ class PUDDLER:
 if __name__ == "__main__":
     test_puddy = PUDDLER()
     a = test_puddy.get_initial_state()
+    state = test_puddy.current_mdp.get_init_state()
+    test_puddy.current_agent.get_max_q_value(state)
+
+    for k in test_puddy.current_agent.q_func:
+        print (k,test_puddy.current_agent.q_func[k])
     test_puddy.current_mdp.visualize_agent(test_puddy.current_agent)

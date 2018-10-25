@@ -273,7 +273,8 @@ def run_agents_on_mdp(agents,
             print("  Instance " + str(instance) + " of " + str(instances) + ".")
             sys.stdout.flush()
             run_single_agent_on_mdp(agent, mdp, episodes, steps, experiment, verbose, track_disc_reward, reset_at_terminal=reset_at_terminal)
-            
+            print (agent.q_func['0.0 0.0'])
+            print (agent.q_func.keys())
             # Reset the agent.
             agent.reset()
             mdp.end_of_instance()

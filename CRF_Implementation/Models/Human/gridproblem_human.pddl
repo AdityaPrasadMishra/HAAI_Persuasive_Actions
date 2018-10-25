@@ -5,7 +5,8 @@
     y0 y1 y2 - ydim
 )
 (:init
-    (current x0 y0)
+    (currentx x0)
+    (currenty y0)
     (righty y0 y1)
     (righty y1 y2)
     (lefty y2 y1)

@@ -30,9 +30,9 @@ class PuddleMDP(GridWorldMDP):
             rand_init (bool)
             step_cost (float)
         '''
-        self.delta = 0.1 #0.05
+        self.delta = 0.2 #0.05
         self.puddle_rects = puddle_rects
-        GridWorldMDP.__init__(self, width=1.0, height=1.0, init_loc=[0.25, 0.6], goal_locs=goal_locs, gamma=gamma, name=name, is_goal_terminal=is_goal_terminal, rand_init=rand_init, step_cost=step_cost)
+        GridWorldMDP.__init__(self, width=1.0, height=1.0, init_loc=[0.0, 0.0], goal_locs=goal_locs, gamma=gamma, name=name, is_goal_terminal=is_goal_terminal, rand_init=rand_init, step_cost=step_cost)
         self.screen = pygame.display.set_mode((720,720))
 
 
@@ -53,7 +53,7 @@ class PuddleMDP(GridWorldMDP):
         if state.is_terminal():
             return 0
         if self._is_goal_state_action(state, action):
-            return 20.0 - self.step_cost
+            return 200.0 - self.step_cost
         elif self._is_puddle_state_action(state, action):
             return -5
         else:
@@ -103,7 +103,7 @@ class PuddleMDP(GridWorldMDP):
             (bool): True iff the state-action pair send the agent to the goal state.
         '''
         for g in self.goal_locs:
-            if _euclidean_distance(state.x, state.y, g[0], g[1]) <= self.delta * 2 and self.is_goal_terminal:
+            if _euclidean_distance(state.x, state.y, g[0], g[1]) <= self.delta and self.is_goal_terminal:
                 # Already at terminal.
                 return False
 
@@ -128,9 +128,15 @@ class PuddleMDP(GridWorldMDP):
             (bool)
         '''
         for g in self.goal_locs:
-            if _euclidean_distance(state_x, state_y, g[0], g[1]) <= self.delta * 2:
+            if _euclidean_distance(state_x, state_y, g[0], g[1]) <= self.delta: #self.delta * 2:
                 return True
         return False
+
+
+    def keep_in_limit(self, curr, to_move):
+        if curr + to_move > 1:
+            return curr
+        return curr + to_move
 
     def _transition_func(self, state, action):
         '''
@@ -145,14 +151,14 @@ class PuddleMDP(GridWorldMDP):
             return state
 
         noise = np.random.randn(1)[0] / 100.0
-        to_move = self.delta + noise
+        to_move = self.delta #+ noise
 
         if action == "up":
-            next_state = GridWorldState(state.x, min(state.y + to_move, 1))
+            next_state = GridWorldState(state.x, self.keep_in_limit(state.y ,to_move))
         elif action == "down":
             next_state = GridWorldState(state.x, max(state.y - to_move, 0))
         elif action == "right":
-            next_state = GridWorldState(min(state.x + to_move, 1), state.y)
+            next_state = GridWorldState(self.keep_in_limit(state.x ,to_move), state.y)
         elif action == "left":
             next_state = GridWorldState(max(state.x - to_move, 0), state.y)
         else:

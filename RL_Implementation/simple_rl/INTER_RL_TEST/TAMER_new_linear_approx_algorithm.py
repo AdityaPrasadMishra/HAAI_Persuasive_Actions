@@ -121,7 +121,8 @@ def tamer_algorithm():
     episode_count = 0
 
     # choose a random explanatory action
-    for i in range(100000):
+    #for i in range(100000):
+    for i in range(10000):
         explanation_features = choose_random_expln_features()
         episode_count += 1
         # Get the human reward:
@@ -147,7 +148,6 @@ def tamer_algorithm():
     # Test the policy
     current_state = puddy.get_initial_state()
     print ("Start from state",current_state)
-    print ("Best action from tamer",all_actions[get_best_action(current_state, approx_model, all_actions, explanation_features)])
     curr_char = "S"
     puddy.visualize_agent(current_state)
     curr_char = raw_input("")
@@ -162,6 +162,21 @@ def tamer_algorithm():
         curr_char = raw_input("")
         #ime.sleep(1)
 
+
+    current_state = puddy.get_initial_state()
+    print ("Best action from tamer",all_actions[get_best_action(current_state, approx_model, all_actions, explanation_features)])
+
+    puddy.visualize_agent(current_state)
+    curr_char = raw_input("")
+    while curr_char.lower() != 'n':
+
+        a = all_actions[get_best_action(current_state, approx_model, all_actions, explanation_features)]
+        print ("Next action", a)
+        next_state = puddy.get_next_state(current_state, a)
+        print ("New state", next_state)
+        current_state = copy.deepcopy(next_state)
+        puddy.visualize_agent(current_state)
+        curr_char = raw_input("")
 
 
 

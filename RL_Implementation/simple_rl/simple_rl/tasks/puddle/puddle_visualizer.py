@@ -70,6 +70,7 @@ def _draw_state(screen,
     font_size = int(min(cell_width, cell_height) / 4.0)
     reg_font = pygame.font.SysFont("CMU Serif", font_size)
     cc_font = pygame.font.SysFont("Courier", font_size*2 + 2)
+    delta = 0.2
     #print ("goal locs", goal_locs)
     # Draw the static entities.
     if draw_statics:
@@ -88,7 +89,7 @@ def _draw_state(screen,
                     top_left_point = width_buffer + cell_width*(i*10) + 5, height_buffer + cell_height*j*10 + 5
                     r = pygame.draw.rect(screen, (0, 127, 255), top_left_point + (cell_width-10, cell_height-10), 0)
 
-                if [i,j] in goal_locs:
+                if [min(i+delta,1.0),min(j+delta,1.0)] in goal_locs:
                     # Draw goal.
                     circle_center = int(top_left_point[0] + cell_width/2.0), int(top_left_point[1] + cell_height/2.0)
                     circler_color = (154, 195, 157)

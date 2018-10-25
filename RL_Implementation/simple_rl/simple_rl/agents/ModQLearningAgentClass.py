@@ -9,7 +9,7 @@ from collections import defaultdict
 # Other imports.
 from simple_rl.agents.AgentClass import Agent
 
-class QLearningAgent(Agent):
+class ModQLearningAgent(Agent):
     ''' Implementation for a Q Learning Agent '''
 
     def __init__(self, actions, name="Q-learning", alpha=0.1, gamma=0.99, epsilon=0.1, explore="uniform", anneal=False):
@@ -59,6 +59,9 @@ class QLearningAgent(Agent):
     # --------------------------------
     # ---- CENTRAL ACTION METHODS ----
     # --------------------------------
+
+    def get_state_key(self, state):
+        return " ".join([str(i) for i in list(state.features())])
 
     def act(self, state, reward, learning=True):
         '''
@@ -146,9 +149,9 @@ class QLearningAgent(Agent):
         # Update the Q Function.
         max_q_curr_state = self.get_max_q_value(next_state)
         prev_q_val = self.get_q_value(state, action)
-        self.q_func[state][action] = (1 - self.alpha) * prev_q_val + self.alpha * (reward + self.gamma*max_q_curr_state)
+        self.q_func[self.get_state_key(state)][action] = (1 - self.alpha) * prev_q_val + self.alpha * (reward + self.gamma*max_q_curr_state)
 
-        print ("self.q_func",state,action, len(self.q_func))
+        #print ("self.q_func",state,action, len(self.q_func))
 
     def _anneal(self):
         # Taken from "Note on learning rate schedules for stochastic optimization, by Darken and Moody (Yale)":
@@ -172,6 +175,7 @@ class QLearningAgent(Agent):
         # Find best action (action w/ current max predicted Q value)
         for action in shuffled_action_list:
             q_s_a = self.get_q_value(state, action)
+            #print ("action",action, q_s_a)
             if q_s_a > max_q_val:
                 max_q_val = q_s_a
                 best_action = action
@@ -217,7 +221,7 @@ class QLearningAgent(Agent):
         Returns:
             (float): denoting the q value of the (@state, @action) pair.
         '''
-        return self.q_func[state][action]
+        return self.q_func[self.get_state_key(state)][action]
 
     def get_action_distr(self, state, beta=0.2):
         '''
