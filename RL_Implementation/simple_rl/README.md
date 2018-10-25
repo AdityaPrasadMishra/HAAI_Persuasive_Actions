@@ -1,4 +1,4 @@
-# Copied over from [here] (https://github.com/david-abel/simple_rl) for our purpose. Please go to the original author's link for the latest version fo the code.
+# Copied over from [here] (https://github.com/david-abel/simple_rl) for our purpose. Please go to the original authors github for the latest version of the code.
 
 # simple_rl
 A simple framework for experimenting with Reinforcement Learning in Python.
