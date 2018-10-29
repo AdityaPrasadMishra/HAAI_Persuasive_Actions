@@ -92,7 +92,6 @@ def make_model():
 
     return model
 
-
 #####################################################################
 # tamer_algorithm(stepSize)
 # -------------------------------------------------------------------
@@ -126,27 +125,56 @@ def tamer_algorithm():
     y = []
     nn_model = make_model()
     nn_model.compile(optimizer='sgd', loss=['mse'], metrics=['accuracy'])
+    X_train_left = []
+    X_train_right = []
+    X_train_up = []
+    X_train_down = []
+    y_train_left = []
+    y_train_right = []
+    y_train_up = []
+    y_train_down = []
     # ------------------------- #
 
-    for i in range(100):
+    for i in range(10000):
 
         explanation_features = choose_random_expln_features()
         episode_count += 1
         # Get the human reward:
         h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
 
+        print "--------- MODEL FIT ----------- "
+        #TODO: The amount of epochs has to decrease as more data comes
         xf = explanation_features
+        # Left
+        if all_actions[current_act_ind] == "left":
+            X_train_left.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
+            y_train_left.append(h)
+
+        # Right
+        if all_actions[current_act_ind] == "right":
+            X_train_right.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
+            y_train_right.append(h)
+
+        # Up
+        if all_actions[current_act_ind] == "up":
+            X_train_up.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
+            y_train_up.append(h)
+
+        # Down
+        if all_actions[current_act_ind] == "down":
+            X_train_down.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
+            y_train_down.append(h)
+
         X.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
         y.append(h)
-
         X_train = np.array(X)
         y_train = np.array(y)
-        #TODO: The amount of epochs has to decrease as more data comes
         epochs = 400
         if X_train.shape[0] % 1000:
             epochs = 400 - (X_train.shape[0]/1000)*10
 
-        nn_model.fit(X_train, y_train, nb_epoch=epochs)
+        # nn_model.fit(X_train, y_train, nb_epoch=epochs)
+        print "-------------------------------------------------------------------------------------------- "
 
         # We assume that the human model is optimal
         # if h != 0:
@@ -164,9 +192,22 @@ def tamer_algorithm():
             current_state = puddy.get_initial_state()
             episode_count = 0
 
-    print "--------- MODEL EVAL ----------- "
+    ####################################################
+    np.savetxt('data/X_train_right.txt', np.array(X_train_right), fmt='%f')
+    np.savetxt('data/X_train_left.txt', np.array(X_train_left), fmt='%f')
+    np.savetxt('data/X_train_up.txt', np.array(X_train_up), fmt='%f')
+    np.savetxt('data/X_train_down.txt', np.array(X_train_down), fmt='%f')
+    np.savetxt('data/y_train_right.txt', np.array(y_train_right), fmt='%f')
+    np.savetxt('data/y_train_left.txt', np.array(y_train_left), fmt='%f')
+    np.savetxt('data/y_train_up.txt', np.array(y_train_up), fmt='%f')
+    np.savetxt('data/y_train_down.txt', np.array(y_train_down), fmt='%f')
+    ####################################################
+
+
+
+    # --------- MODEL EVAL -----------  #
     print nn_model.evaluate(X_train, y_train)
-    print "-------------------------------- "
+    # -------------------------------- #
 
     explanation_features = [0, 0, 0]
     # Test the policy
