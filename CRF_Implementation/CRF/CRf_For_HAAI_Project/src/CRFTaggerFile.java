@@ -548,6 +548,7 @@ public class CRFTaggerFile {
 		}
 		else {
 			testFile = new FileReader(new File(args[restArgs]));
+			testFileValidator = new FileReader(new File(args[restArgs+1]));
 		}
 
 		Pipe p = null;
@@ -607,7 +608,6 @@ public class CRFTaggerFile {
 				testData.addThruPipe(
 									 new LineGroupIterator(testFile,
 														   Pattern.compile("^\\s*$"), true));
-				testFileValidator = new FileReader("DATA/TESTRESULT/feature_set_results");
 				testFileValidatorData = new InstanceList(p);
 				testFileValidatorData.addThruPipe(
 									 new LineGroupIterator(testFileValidator,
@@ -695,6 +695,9 @@ public class CRFTaggerFile {
 				System.out.println(testData.size());
 				int counter = 0;
 				int wrongpred = 0;
+				float unexpscore = 0;
+				int unexpcount = 0;
+				int size1 = 0;
 				for (int i = 0; i < testData.size(); i++) {
 					Sequence input = (Sequence)testData.get(i).getData();
 					Sequence result = (Sequence)testFileValidatorData.get(i).getData();
@@ -707,6 +710,7 @@ public class CRFTaggerFile {
 							error = true;
 						}
 					}
+					size1 = input.size();
 					if (! error) {
 						for (int j = 0; j < input.size(); j++) {
 							StringBuffer buf = new StringBuffer();
@@ -724,16 +728,20 @@ public class CRFTaggerFile {
 								System.out.println("Wrong Prediction");
 								System.out.println("actual result :"+ actualresult);								
 							}
+							if(buf.toString().trim().toUpperCase().equals("UNEXP"))
+							{
+								unexpcount +=1; 
+							}
 							System.out.println(buf.toString());
 							counter +=1;
 						}
 						System.out.println();
 					}
 				}
-				System.out.println(counter);
-				System.out.println(wrongpred);
 				float Testaccuarcy =  ((float)(counter - wrongpred)/(float)counter)*100;
-				System.out.println("Test Accuracy "+ Testaccuarcy);
+				unexpscore = (float)unexpcount/(float)size1;
+				System.out.println("Explicability Score :"+ (1 - unexpscore));
+				System.out.println("Test Accuracy :"+ Testaccuarcy);
 			}
 		}
 
