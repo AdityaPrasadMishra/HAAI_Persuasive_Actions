@@ -2,7 +2,9 @@
 
 from queue import PriorityQueue, Queue
 import copy
-
+import os
+import re
+import subprocess
 '''
 Method :: Astar Search
 '''
@@ -42,28 +44,31 @@ class SearchNode:
         return len(self.action_set) - len(self.trace) + self.alpha * self.get_explicability_score()
 
     def get_explicability_score(self):
-        new_trace = self.get_new_trace()
-        HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src" 
-        cmd ="cd "+ HAAISearchLocation+" &&"
-        cmd += "java  -jar 'CRFModel.jar' &&" 
-        cmd += " --model-file HAAICRFEXP feature_set_0_test feature_set_0_result &&" 
-        cmd += "| grep 'Explicability Score :''        
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-        (out, err) = proc.communicate()
-        print('[DEBUG] Running command: {}'.format(cmd))
-        print('[DEBUG] Output of Explicability Test: {}'.format(out))
-        print('[DEBUG] Output of Explicability Test Error: {}'.format(err))
-        outarr =out.split("Explicability Score :")
-        print(outarr)        
-        out = float(outarr.strip())
-        return out 
+        try:
+            new_trace = str(self.get_new_trace())
+            with open("feature_set_0_test", 'w') as out:
+                out.write(new_trace + '\n')
+            HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src"
+            cmd ="cd "+ HAAISearchLocation+" &&"
+            cmd += "java  -jar 'CRFModel.jar' &&" 
+            cmd += " --model-file HAAICRFEXP feature_set_0_test &&" 
+            cmd += "| grep 'Explicability Score :'"        
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+            (out, err) = proc.communicate()
+            print('[DEBUG] Running command: {}'.format(cmd))
+            print('[DEBUG] Output of Explicability Test: {}'.format(out))
+            print('[DEBUG] Output of Explicability Test Error: {}'.format(err))
+            outarr =out.split("Explicability Score :")[1]
+            print(outarr)        
+            out = float(outarr.strip())
+            return out 
 
         except Exception as e:
             if hasattr(e, 'message'):
                 print(e.message)
             else:
                 print(e)
-            return False
+            return "An Error Occured."
 
         # TODO: Mishraji will fill this in 
 
