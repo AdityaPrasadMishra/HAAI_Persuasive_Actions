@@ -19,13 +19,13 @@ class SearchNode:
         self.alpha = alpha
 
     def get_successors(self):
-        poss_actions = action_set - self.current_state
+        poss_actions = self.action_set - self.current_state
         successor_list = []
 
         for act in poss_actions:
             new_state= self.current_state | set([act])
             new_node = SearchNode(new_state, self.action_set, self.prefix+[act], self.trace, self.alpha)
-            successor_list.append(successor_list)
+            successor_list.append(new_node)
 
         return successor_list
 
@@ -36,6 +36,7 @@ class SearchNode:
     def get_new_trace(self):
         new_trace = []
         exp_act_feats = self.explanatory_action_feats()
+        print ("feats",exp_act_feats)
         for i in range(len(self.trace)):
             new_trace.append(self.trace[i]+ " " + exp_act_feats)
         return new_trace
@@ -97,10 +98,10 @@ def Exhaustive_Search(start_state, max_length = 2):
             best_node = node
             best_node_val = node_val
 
-        if frozenset(node.current_state) not in closed and len(node.trace) <= max_length - 1:
-            closed.add(frozenset(node[0]))
+        if frozenset(node.current_state) not in closed and len(node.prefix) <= max_length - 1:
+            closed.add(frozenset(node.current_state))
 
-            successor_list         = problem.getSuccessors(node, old_plan)
+            successor_list         = node.get_successors()
             numberOfNodesExpanded += 1
             #print successor_list, node[1]
             if not numberOfNodesExpanded % 100:
