@@ -35,33 +35,47 @@ epsilon = 0.5
 explanatory_actions = ["No Explanation", "Puddle #1 is shallow", "Puddle #2 is shallow", "All puddles are shallow"]
 
 
-def get_best_action(state, model, acts, explanation_features):
-    curr_best_act_index = 0
-    # np_s = np.array([list(state.features())+explanation_features+[curr_best_act_index]])
-    curr_best_act_val = model.get_q_value(state, np.array(explanation_features), acts[curr_best_act_index])
+def get_best_action(state, actions_models, acts, explanation_features):
+    # In this function we have to select the best action to take
+    xf = explanation_features
+    best_act = 0
+
+    for i, act in enumerate(acts):
+        X_to_predict = np.array([state.x, state.y, i, xf[0], xf[1], xf[2]])
+        best_h = -np.inf
+        model_name = 'nn_model_{}'.format(act)
+
+        aux = actions_models[model_name].predict(X_to_predict)
+        if aux > best_h:
+            best_h = aux
+            best_act = i
+
+    return best_act
+
+    # curr_best_act_val = model.get_q_value(state, np.array(explanation_features), acts[curr_best_act_index])
     # Equality check
-    equal_flag = True
-    for curr_index in range(len(acts)):
-        curr_val = model.get_q_value(state, np.array(explanation_features), acts[curr_index])
-        # print ("act",acts[curr_index], curr_val)
-        if curr_val > curr_best_act_val:
-            curr_best_act_val = curr_val
-            curr_best_act_index = curr_index
-        if curr_val != curr_best_act_val:
-            equal_flag = False
+    # equal_flag = True
+    # for curr_index in range(len(acts)):
+    #     curr_val = model.get_q_value(state, np.array(explanation_features), acts[curr_index])
+    #     print ("act",acts[curr_index], curr_val)
+        # if curr_val > curr_best_act_val:
+        #     curr_best_act_val = curr_val
+        #     curr_best_act_index = curr_index
+        # if curr_val != curr_best_act_val:
+        #     equal_flag = False
+    #
+    # if equal_flag:
+    #     print("we reached here")
+    #     curr_best_act_index = randint(0, len(acts) - 1)
+    # return curr_best_act_index
 
-    if equal_flag:
-        print("we reached here")
-        curr_best_act_index = randint(0, len(acts) - 1)
-    return curr_best_act_index
 
-
-def epsilon_greedy(state, model, acts, explanation_features):
+def epsilon_greedy(state, actions_models, acts, explanation_features):
     # Policy: Epsilon of the time explore, otherwise, greedyQ.
     global epsilon
     if np.random.random() > epsilon:
         # Exploit.
-        action_id = get_best_action(state, model, acts, explanation_features)
+        action_id = get_best_action(state, actions_models, acts, explanation_features)
     else:
         # Explore
         action_id = np.random.randint(0, len(acts) - 1)
@@ -85,12 +99,22 @@ def choose_random_expln_features():
 def make_model():
     model = Sequential()
 
-    model.add(Dense(2, input_shape=(6,)))
-    model.add(Dense(2, activation='relu'))
-    model.add(Dense(2, activation='relu'))
+    model.add(Dense(10, input_shape=(6,)))
     model.add(Dense(1))
+    model.compile(optimizer='sgd', loss=['mean_absolute_error'], metrics=['accuracy'])
 
     return model
+
+def get_action_models_and_training_sets(actions):
+    actions_models = {}
+    actions_X_train = {}
+    actions_y_train = {}
+    for a in actions:
+        actions_models['nn_model_{}'.format(a)] = make_model()
+        actions_X_train['X_train_{}'.format(a)] = []
+        actions_y_train['y_train_{}'.format(a)] = []
+
+    return actions_models, actions_X_train, actions_y_train
 
 #####################################################################
 # tamer_algorithm(stepSize)
@@ -108,83 +132,68 @@ def tamer_algorithm():
     current_act_ind = randint(0, len(all_actions) - 1)
 
     # Fit the values from the data
-    # reg = SGDRegressor(max_iter=100).fit(X_train, y_train)
-    approx_model = LinearFuncApprox(num_features=5, actions=all_actions)
-    approx_model.update(init_state, np.array(explanation_features), all_actions[current_act_ind],
-                        puddy.get_human_reinf_from_prev_step(init_state, all_actions[current_act_ind],
-                                                             explanation_features))
-
-    current_state = puddy.get_next_state(init_state, all_actions[current_act_ind])
-    current_act_ind = epsilon_greedy(current_state, approx_model, all_actions, explanation_features)
+    # approx_model = LinearFuncApprox(num_features=5, actions=all_actions)
+    # approx_model.update(init_state, np.array(explanation_features), all_actions[current_act_ind],
+    #                     puddy.get_human_reinf_from_prev_step(init_state, all_actions[current_act_ind],
+    #                                                          explanation_features))
+    #
+    # current_state = puddy.get_next_state(init_state, all_actions[current_act_ind])
+    # current_act_ind = epsilon_greedy(current_state, approx_model, all_actions, explanation_features)
 
     EPISODE_LIMIT = 100
     episode_count = 0
 
     # ------------------------- #
+    actions_models, actions_X_train, actions_y_train = get_action_models_and_training_sets(all_actions)
     X = []
     y = []
-    nn_model = make_model()
-    nn_model.compile(optimizer='sgd', loss=['mse'], metrics=['accuracy'])
-    X_train_left = []
-    X_train_right = []
-    X_train_up = []
-    X_train_down = []
-    y_train_left = []
-    y_train_right = []
-    y_train_up = []
-    y_train_down = []
-    # ------------------------- #
+    current_state = puddy.get_next_state(init_state, all_actions[current_act_ind])
+    # current_act_ind = epsilon_greedy(current_state, actions_models, all_actions, explanation_features)
 
-    for i in range(10000):
+    batch_size = 250
+    num_iters = 10000
+
+    aux_X_train = []
+    aux_h = []
+    for i in range(num_iters):
+        prev_best_action = all_actions[current_act_ind]
+        model_name = 'nn_model_{}'.format(prev_best_action)
+        X_train_name = 'X_train_{}'.format(prev_best_action)
+        y_train_name = 'y_train_{}'.format(prev_best_action)
 
         explanation_features = choose_random_expln_features()
         episode_count += 1
         # Get the human reward:
         h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
+        aux_h.append(h)
 
-        print "--------- MODEL FIT ----------- "
-        #TODO: The amount of epochs has to decrease as more data comes
         xf = explanation_features
-        # Left
-        if all_actions[current_act_ind] == "left":
-            X_train_left.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
-            y_train_left.append(h)
+        aux_X_train.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
+        actions_X_train[X_train_name] = np.array(aux_X_train)
+        actions_y_train[y_train_name] = np.array(aux_h)
+        X_train = actions_X_train[X_train_name]
+        y_train = actions_y_train[y_train_name]
 
-        # Right
-        if all_actions[current_act_ind] == "right":
-            X_train_right.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
-            y_train_right.append(h)
+        # If have a batch of data ready, train and predict from it
+        # Update the models if we are on a batch_size iteration
+        if i % batch_size == 0:
+            weights_file = 'weights/weights_{}.hdf5'.format(prev_best_action)
 
-        # Up
-        if all_actions[current_act_ind] == "up":
-            X_train_up.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
-            y_train_up.append(h)
+            curr_model = actions_models[model_name]
 
-        # Down
-        if all_actions[current_act_ind] == "down":
-            X_train_down.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
-            y_train_down.append(h)
+            try:
+                curr_model.load_weights(weights_file)
+            except:
+                pass
 
-        X.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
-        y.append(h)
-        X_train = np.array(X)
-        y_train = np.array(y)
-        epochs = 400
-        if X_train.shape[0] % 1000:
-            epochs = 400 - (X_train.shape[0]/1000)*10
-
-        # nn_model.fit(X_train, y_train, nb_epoch=epochs)
-        print "-------------------------------------------------------------------------------------------- "
-
-        # We assume that the human model is optimal
-        # if h != 0:
-        # Online learning:
-        #        print(current_state, h, all_actions[current_act_ind])
-        approx_model.update(current_state, np.array(explanation_features), all_actions[current_act_ind], h)
+            curr_model.fit(X_train, y_train, nb_epoch=20, batch_size=2)
+            curr_model.save_weights(weights_file)
 
         # Get the next state based on action (random for the moment)
         new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
-        current_act_ind = epsilon_greedy(new_state, approx_model, all_actions, explanation_features)
+
+        # TODO: This is the predict part
+        current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features)
         # print ("current action", all_actions[current_act_ind])
         current_state = copy.deepcopy(new_state)
 
@@ -192,21 +201,8 @@ def tamer_algorithm():
             current_state = puddy.get_initial_state()
             episode_count = 0
 
-    ####################################################
-    np.savetxt('data/X_train_right.txt', np.array(X_train_right), fmt='%f')
-    np.savetxt('data/X_train_left.txt', np.array(X_train_left), fmt='%f')
-    np.savetxt('data/X_train_up.txt', np.array(X_train_up), fmt='%f')
-    np.savetxt('data/X_train_down.txt', np.array(X_train_down), fmt='%f')
-    np.savetxt('data/y_train_right.txt', np.array(y_train_right), fmt='%f')
-    np.savetxt('data/y_train_left.txt', np.array(y_train_left), fmt='%f')
-    np.savetxt('data/y_train_up.txt', np.array(y_train_up), fmt='%f')
-    np.savetxt('data/y_train_down.txt', np.array(y_train_down), fmt='%f')
-    ####################################################
-
-
-
     # --------- MODEL EVAL -----------  #
-    print nn_model.evaluate(X_train, y_train)
+    # print nn_model.evaluate(X_train, y_train)
     # -------------------------------- #
 
     explanation_features = [0, 0, 0]
