@@ -47,7 +47,8 @@ class SearchNode:
         try:
             new_trace = str(self.get_new_trace())
             with open("feature_set_0_test", 'w') as out:
-                out.write(new_trace + '\n')
+                for nt in new_trace:
+                    out.write(nt + '\n')
             HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src"
             cmd ="cd "+ HAAISearchLocation+" &&"
             cmd += "java  -jar 'CRFModel.jar' &&" 
