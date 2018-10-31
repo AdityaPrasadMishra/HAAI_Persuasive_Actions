@@ -27,8 +27,8 @@
 (:goal
 (and
     (unfetched_box)
-    (observedx x2)
-    (observedy y0)
+    (observedx x1)
+    (observedy y1)
 )
 )
 )

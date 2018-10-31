@@ -63,6 +63,7 @@ class Executor:
         return ground_operators
 
     def execute_plan(self):
+        #print(self.grounded_robot_model_map)
         current_state = copy.deepcopy(self.orig_start)
         beh_trace = []
         l_id = 0

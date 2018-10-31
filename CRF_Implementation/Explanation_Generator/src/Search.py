@@ -2,7 +2,9 @@
 
 from queue import PriorityQueue, Queue
 import copy
-
+import os
+import re
+import subprocess
 '''
 Method :: Astar Search
 '''
@@ -17,13 +19,13 @@ class SearchNode:
         self.alpha = alpha
 
     def get_successors(self):
-        poss_actions = action_set - self.current_state
+        poss_actions = self.action_set - self.current_state
         successor_list = []
 
         for act in poss_actions:
             new_state= self.current_state | set([act])
             new_node = SearchNode(new_state, self.action_set, self.prefix+[act], self.trace, self.alpha)
-            successor_list.append(successor_list)
+            successor_list.append(new_node)
 
         return successor_list
 
@@ -34,6 +36,7 @@ class SearchNode:
     def get_new_trace(self):
         new_trace = []
         exp_act_feats = self.explanatory_action_feats()
+        print ("feats",exp_act_feats)
         for i in range(len(self.trace)):
             new_trace.append(self.trace[i]+ " " + exp_act_feats)
         return new_trace
@@ -42,28 +45,31 @@ class SearchNode:
         return len(self.action_set) - len(self.trace) + self.alpha * self.get_explicability_score()
 
     def get_explicability_score(self):
-        new_trace = self.get_new_trace()
-        HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src" 
-        cmd ="cd "+ HAAISearchLocation+" &&"
-        cmd += "java  -jar 'CRFModel.jar' &&" 
-        cmd += " --model-file HAAICRFEXP feature_set_0_test feature_set_0_result &&" 
-        cmd += "| grep 'Explicability Score :''        
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-        (out, err) = proc.communicate()
-        print('[DEBUG] Running command: {}'.format(cmd))
-        print('[DEBUG] Output of Explicability Test: {}'.format(out))
-        print('[DEBUG] Output of Explicability Test Error: {}'.format(err))
-        outarr =out.split("Explicability Score :")
-        print(outarr)        
-        out = float(outarr.strip())
-        return out 
+        try:
+            new_trace = self.get_new_trace()
+            with open("feature_set_0_test", 'w') as out:
+                for nt in new_trace:
+                    out.write(nt + '\n')
+            HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src"
+            cmd =""
+            cmd += "java  -jar 'CRFModel.jar' --model-file HAAICRFEXP feature_set_0_test |grep 'Explicability Score :'"        
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+            (out, err) = proc.communicate()
+            print("here")
+            print('[DEBUG] Running command: {}'.format(cmd))
+            print('[DEBUG] Output of Explicability Test: {}'.format(out))
+            print('[DEBUG] Output of Explicability Test Error: {}'.format(err))
+            outarr =str(out).split("Explicability Score :")[1].split("\\n")[0]
+            print("EXP score :"+ str(outarr))        
+            out = float(outarr.strip())
+            return out 
 
         except Exception as e:
             if hasattr(e, 'message'):
                 print(e.message)
             else:
                 print(e)
-            return False
+            return "An Error Occured."
 
         # TODO: Mishraji will fill this in 
 
@@ -92,10 +98,10 @@ def Exhaustive_Search(start_state, max_length = 2):
             best_node = node
             best_node_val = node_val
 
-        if frozenset(node.current_state) not in closed and len(node.trace) <= max_length - 1:
-            closed.add(frozenset(node[0]))
+        if frozenset(node.current_state) not in closed and len(node.prefix) <= max_length - 1:
+            closed.add(frozenset(node.current_state))
 
-            successor_list         = problem.getSuccessors(node, old_plan)
+            successor_list         = node.get_successors()
             numberOfNodesExpanded += 1
             #print successor_list, node[1]
             if not numberOfNodesExpanded % 100:
