@@ -45,22 +45,21 @@ class SearchNode:
 
     def get_explicability_score(self):
         try:
-            new_trace = str(self.get_new_trace())
+            new_trace = self.get_new_trace()
             with open("feature_set_0_test", 'w') as out:
                 for nt in new_trace:
                     out.write(nt + '\n')
             HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src"
-            cmd ="cd "+ HAAISearchLocation+" &&"
-            cmd += "java  -jar 'CRFModel.jar' &&" 
-            cmd += " --model-file HAAICRFEXP feature_set_0_test &&" 
-            cmd += "| grep 'Explicability Score :'"        
+            cmd =""
+            cmd += "java  -jar 'CRFModel.jar' --model-file HAAICRFEXP feature_set_0_test |grep 'Explicability Score :'"        
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
             (out, err) = proc.communicate()
+            print("here")
             print('[DEBUG] Running command: {}'.format(cmd))
             print('[DEBUG] Output of Explicability Test: {}'.format(out))
             print('[DEBUG] Output of Explicability Test Error: {}'.format(err))
-            outarr =out.split("Explicability Score :")[1]
-            print(outarr)        
+            outarr =str(out).split("Explicability Score :")[1].split("\\n")[0]
+            print("EXP score :"+ str(outarr))        
             out = float(outarr.strip())
             return out 
 
