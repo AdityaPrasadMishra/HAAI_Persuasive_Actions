@@ -641,7 +641,7 @@ public class CRFTagger {
 					    for (File child : testDir) {
 					    	String firstnameresult = child.getName().split("_test")[0];
 					    	String actualnameresult = firstnameresult +"_result";
-					    	File childResult = new File("DATA/EXPEXPLAIN/TESTRSET/"+ actualnameresult);
+					    	File childResult = new File("DATA/EXPEXPLAIN2/TESTACTRSET/"+ actualnameresult);
 							testFile = new FileReader(child);	
 							testData.addThruPipe(new LineGroupIterator(testFile,
 									   Pattern.compile("^\\s*$"), true));
