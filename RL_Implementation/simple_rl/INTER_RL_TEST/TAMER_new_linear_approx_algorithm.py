@@ -39,36 +39,18 @@ def get_best_action(state, actions_models, acts, explanation_features):
     # In this function we have to select the best action to take
     xf = explanation_features
     best_act = 0
+    best_h = -np.inf
 
     for i, act in enumerate(acts):
-        X_to_predict = np.array([state.x, state.y, i, xf[0], xf[1], xf[2]])
-        best_h = -np.inf
-        model_name = 'nn_model_{}'.format(act)
+        X_to_predict = np.array([[state.x, state.y, i, xf[0], xf[1], xf[2]]])
 
-        aux = actions_models[model_name].predict(X_to_predict)
+        model_name = 'nn_model_{}'.format(act)
+        aux = actions_models[model_name].predict(X_to_predict).flatten()[0]
         if aux > best_h:
             best_h = aux
             best_act = i
 
     return best_act
-
-    # curr_best_act_val = model.get_q_value(state, np.array(explanation_features), acts[curr_best_act_index])
-    # Equality check
-    # equal_flag = True
-    # for curr_index in range(len(acts)):
-    #     curr_val = model.get_q_value(state, np.array(explanation_features), acts[curr_index])
-    #     print ("act",acts[curr_index], curr_val)
-        # if curr_val > curr_best_act_val:
-        #     curr_best_act_val = curr_val
-        #     curr_best_act_index = curr_index
-        # if curr_val != curr_best_act_val:
-        #     equal_flag = False
-    #
-    # if equal_flag:
-    #     print("we reached here")
-    #     curr_best_act_index = randint(0, len(acts) - 1)
-    # return curr_best_act_index
-
 
 def epsilon_greedy(state, actions_models, acts, explanation_features):
     # Policy: Epsilon of the time explore, otherwise, greedyQ.
@@ -109,12 +91,16 @@ def get_action_models_and_training_sets(actions):
     actions_models = {}
     actions_X_train = {}
     actions_y_train = {}
+    aux_X_train = {}
+    aux_y_train = {}
     for a in actions:
         actions_models['nn_model_{}'.format(a)] = make_model()
         actions_X_train['X_train_{}'.format(a)] = []
         actions_y_train['y_train_{}'.format(a)] = []
+        aux_X_train['X_train_{}'.format(a)] = []
+        aux_y_train['y_train_{}'.format(a)] = []
 
-    return actions_models, actions_X_train, actions_y_train
+    return actions_models, actions_X_train, actions_y_train, aux_X_train, aux_y_train
 
 #####################################################################
 # tamer_algorithm(stepSize)
@@ -144,7 +130,8 @@ def tamer_algorithm():
     episode_count = 0
 
     # ------------------------- #
-    actions_models, actions_X_train, actions_y_train = get_action_models_and_training_sets(all_actions)
+    actions_models, actions_X_train, actions_y_train, aux_X_train, aux_y_train \
+        = get_action_models_and_training_sets(all_actions)
     X = []
     y = []
     current_state = puddy.get_next_state(init_state, all_actions[current_act_ind])
@@ -152,9 +139,6 @@ def tamer_algorithm():
 
     batch_size = 250
     num_iters = 10000
-
-    aux_X_train = []
-    aux_h = []
     for i in range(num_iters):
         prev_best_action = all_actions[current_act_ind]
         model_name = 'nn_model_{}'.format(prev_best_action)
@@ -165,12 +149,12 @@ def tamer_algorithm():
         episode_count += 1
         # Get the human reward:
         h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
-        aux_h.append(h)
+        aux_y_train[y_train_name].append(h)
 
         xf = explanation_features
-        aux_X_train.append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
-        actions_X_train[X_train_name] = np.array(aux_X_train)
-        actions_y_train[y_train_name] = np.array(aux_h)
+        aux_X_train[X_train_name].append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
+        actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
+        actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
         X_train = actions_X_train[X_train_name]
         y_train = actions_y_train[y_train_name]
 
@@ -178,7 +162,6 @@ def tamer_algorithm():
         # Update the models if we are on a batch_size iteration
         if i % batch_size == 0:
             weights_file = 'weights/weights_{}.hdf5'.format(prev_best_action)
-
             curr_model = actions_models[model_name]
 
             try:
@@ -192,7 +175,7 @@ def tamer_algorithm():
         # Get the next state based on action (random for the moment)
         new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
 
-        # TODO: This is the predict part
+        # This is the predict part
         current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features)
         # print ("current action", all_actions[current_act_ind])
         current_state = copy.deepcopy(new_state)
