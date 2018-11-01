@@ -102,43 +102,47 @@ def get_action_models_and_training_sets(actions):
 
     return actions_models, actions_X_train, actions_y_train, aux_X_train, aux_y_train
 
+
+def load_trained_actions_models(actions):
+    weights_file_str = 'weights/weights_{}.hdf5'
+    actions_models = {}
+
+    # Init each model
+    for a in actions:
+        model_name = 'nn_model_{}'.format(a)
+        weights_file = weights_file_str.format(a)
+
+        actions_models[model_name] = make_model()
+        actions_models[model_name].load_weights(weights_file)
+
+    return actions_models
+
 #####################################################################
 # tamer_algorithm(stepSize)
 # -------------------------------------------------------------------
 # Description: Implementation of the TAMER algorithm
 #####################################################################
 def tamer_algorithm():
-    puddy = PUDDLER()
+    weights_file_str = 'weights/weights_{}.hdf5'
 
+    puddy = PUDDLER()
     init_state = puddy.get_initial_state()
     all_actions = puddy.get_possible_actions()
-
-    explanation_features = [0, 0, 0]
-
     current_act_ind = randint(0, len(all_actions) - 1)
-
-    # Fit the values from the data
-    # approx_model = LinearFuncApprox(num_features=5, actions=all_actions)
-    # approx_model.update(init_state, np.array(explanation_features), all_actions[current_act_ind],
-    #                     puddy.get_human_reinf_from_prev_step(init_state, all_actions[current_act_ind],
-    #                                                          explanation_features))
-    #
-    # current_state = puddy.get_next_state(init_state, all_actions[current_act_ind])
-    # current_act_ind = epsilon_greedy(current_state, approx_model, all_actions, explanation_features)
 
     EPISODE_LIMIT = 100
     episode_count = 0
 
-    # ------------------------- #
     actions_models, actions_X_train, actions_y_train, aux_X_train, aux_y_train \
         = get_action_models_and_training_sets(all_actions)
-    X = []
-    y = []
+
     current_state = puddy.get_next_state(init_state, all_actions[current_act_ind])
     # current_act_ind = epsilon_greedy(current_state, actions_models, all_actions, explanation_features)
 
-    batch_size = 250
-    num_iters = 10000
+    start_time = time.time()
+
+    batch_size = 500
+    num_iters = 10000*500
     for i in range(num_iters):
         prev_best_action = all_actions[current_act_ind]
         model_name = 'nn_model_{}'.format(prev_best_action)
@@ -161,7 +165,7 @@ def tamer_algorithm():
         # If have a batch of data ready, train and predict from it
         # Update the models if we are on a batch_size iteration
         if i % batch_size == 0:
-            weights_file = 'weights/weights_{}.hdf5'.format(prev_best_action)
+            weights_file = weights_file_str.format(prev_best_action)
             curr_model = actions_models[model_name]
 
             try:
@@ -184,8 +188,13 @@ def tamer_algorithm():
             current_state = puddy.get_initial_state()
             episode_count = 0
 
-    # --------- MODEL EVAL -----------  #
-    # print nn_model.evaluate(X_train, y_train)
+    elapsed_time = time.time() - start_time
+    print ("------------------------------------------------------------")
+    print (" Elapsed time to train: {}".format(elapsed_time))
+    print ("------------------------------------------------------------")
+
+    # ------------ EVAL --------------  #
+    actions_models = load_trained_actions_models(all_actions)
     # -------------------------------- #
 
     explanation_features = [0, 0, 0]
@@ -203,16 +212,15 @@ def tamer_algorithm():
         current_state = copy.deepcopy(next_state)
         puddy.visualize_agent(current_state)
         curr_char = raw_input("")
-        # ime.sleep(1)
 
     current_state = puddy.get_initial_state()
     print("Best action from tamer",
-          all_actions[get_best_action(current_state, approx_model, all_actions, explanation_features)])
+          all_actions[get_best_action(current_state, actions_models, all_actions, explanation_features)])
 
     puddy.visualize_agent(current_state)
     curr_char = raw_input("")
     while curr_char.lower() != 'n':
-        a = all_actions[get_best_action(current_state, approx_model, all_actions, explanation_features)]
+        a = all_actions[get_best_action(current_state, actions_models, all_actions, explanation_features)]
         print("Next action", a)
         next_state = puddy.get_next_state(current_state, a)
         print("New state", next_state)
