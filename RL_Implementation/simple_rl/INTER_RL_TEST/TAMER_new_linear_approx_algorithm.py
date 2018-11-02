@@ -141,7 +141,7 @@ def tamer_algorithm():
 
     start_time = time.time()
 
-    batch_size = 500
+    batch_size = 250
     num_iters = 10000*500
     for i in range(num_iters):
         prev_best_action = all_actions[current_act_ind]
@@ -172,7 +172,9 @@ def tamer_algorithm():
                 curr_model.load_weights(weights_file)
             except:
                 pass
-
+            print("----------------------------------")
+            print "IN ITERATION {}".format(i)
+            print("TRAINING {}".format(prev_best_action))
             curr_model.fit(X_train, y_train, nb_epoch=20, batch_size=2)
             curr_model.save_weights(weights_file)
 
