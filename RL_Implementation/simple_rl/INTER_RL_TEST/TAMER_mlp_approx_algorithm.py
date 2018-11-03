@@ -142,7 +142,7 @@ def tamer_algorithm():
     start_time = time.time()
 
     batch_size = 250
-    num_iters = 10000*500
+    num_iters = 10*500
     for i in range(num_iters):
         prev_best_action = all_actions[current_act_ind]
         model_name = 'nn_model_{}'.format(prev_best_action)
@@ -165,9 +165,9 @@ def tamer_algorithm():
         if i % batch_size == 0:
             for poss_act in all_actions:
                 train_weights_file = weights_file_str.format(poss_act)
-                train_model_name = 'nn_model_{}'.format(prev_best_action)
-                train_X_name = 'X_train_{}'.format(prev_best_action)
-                train_y_name = 'y_train_{}'.format(prev_best_action)
+                train_model_name = 'nn_model_{}'.format(poss_act)
+                train_X_name = 'X_train_{}'.format(poss_act)
+                train_y_name = 'y_train_{}'.format(poss_act)
 
                 curr_model = actions_models[train_model_name]
 
@@ -182,7 +182,7 @@ def tamer_algorithm():
                     y_train = actions_y_train[train_y_name]
 
                     curr_model.fit(X_train, y_train, nb_epoch=20, batch_size=2)
-                    curr_model.save_weights(weights_file)
+                    curr_model.save_weights(train_weights_file)
 
         # Get the next state based on action (random for the moment)
         new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
