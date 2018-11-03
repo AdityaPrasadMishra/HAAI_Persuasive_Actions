@@ -48,7 +48,7 @@ class SearchNode:
         global GLOB_1
         try:
             new_trace = self.get_new_trace()
-            with open("feature_set_"+str(GLOB_1)+"_test", 'w') as out:
+            with open("feature_set_"+str(GLOB_1)+"_test", 'a') as out:
                 for nt in new_trace:
                     out.write(nt + '\n')
             HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src"
@@ -63,7 +63,7 @@ class SearchNode:
             outarr =str(out).split("Explicability Score :")[1].split("\\n")[0]
             print("EXP score :"+ str(outarr))        
             out = float(outarr.strip())
-            GLOB_1+=1
+            #GLOB_1+=1
             return out 
 
         except Exception as e:
