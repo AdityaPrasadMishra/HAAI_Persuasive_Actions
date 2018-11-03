@@ -30,7 +30,7 @@ from LinearTamerApprox import LinearFuncApprox
 #   waitForNextTimestep                                             #
 #####################################################################
 
-epsilon = 0.5
+epsilon = 0.75
 
 explanatory_actions = ["No Explanation", "Puddle #1 is shallow", "Puddle #2 is shallow", "All puddles are shallow"]
 
@@ -50,6 +50,7 @@ def get_best_action(state, actions_models, acts, explanation_features):
             best_h = aux
             best_act = i
 
+    print ("best action",i,best_h)
     return best_act
 
 def epsilon_greedy(state, actions_models, acts, explanation_features):
@@ -60,7 +61,7 @@ def epsilon_greedy(state, actions_models, acts, explanation_features):
         action_id = get_best_action(state, actions_models, acts, explanation_features)
     else:
         # Explore
-        action_id = np.random.randint(0, len(acts) - 1)
+        action_id = np.random.randint(0, len(acts))
 
     return action_id
 
@@ -130,7 +131,7 @@ def tamer_algorithm():
     all_actions = puddy.get_possible_actions()
     current_act_ind = randint(0, len(all_actions) - 1)
 
-    EPISODE_LIMIT = 100
+    EPISODE_LIMIT = 40
     episode_count = 0
 
     actions_models, actions_X_train, actions_y_train, aux_X_train, aux_y_train \
@@ -155,6 +156,7 @@ def tamer_algorithm():
         h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
         aux_y_train[y_train_name].append(h)
 
+        print ("prev_best_action",current_state,prev_best_action,h)
         xf = explanation_features
         aux_X_train[X_train_name].append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
         actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
@@ -175,14 +177,16 @@ def tamer_algorithm():
                     curr_model.load_weights(train_weights_file)
                 except:
                     pass
-                    print("----------------------------------")
-                    print "IN ITERATION {}".format(i)
-                    print("TRAINING {}".format(prev_best_action))
-                    X_train = actions_X_train[train_X_name]
-                    y_train = actions_y_train[train_y_name]
-
+                print("----------------------------------")
+                print "IN ITERATION {}".format(i)
+                print("TRAINING {}".format(prev_best_action))
+                X_train = actions_X_train[train_X_name]
+                y_train = actions_y_train[train_y_name]
+                if len(X_train) > 0:
                     curr_model.fit(X_train, y_train, nb_epoch=20, batch_size=2)
                     curr_model.save_weights(train_weights_file)
+                else:
+                    print ("actions ",poss_act)
 
         # Get the next state based on action (random for the moment)
         new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
