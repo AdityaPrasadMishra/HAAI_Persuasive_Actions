@@ -8,7 +8,7 @@ import subprocess
 '''
 Method :: Astar Search
 '''
-
+GLOB_1 = 0
 
 class SearchNode:
     def __init__(self, state = set(), action_set = set(), prefix = [], trace = [], alpha = 1.0):
@@ -45,14 +45,15 @@ class SearchNode:
         return len(self.action_set) - len(self.trace) + self.alpha * self.get_explicability_score()
 
     def get_explicability_score(self):
+        global GLOB_1
         try:
             new_trace = self.get_new_trace()
-            with open("feature_set_0_test", 'w') as out:
+            with open("feature_set_"+str(GLOB_1)+"_test", 'w') as out:
                 for nt in new_trace:
                     out.write(nt + '\n')
             HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src"
             cmd =""
-            cmd += "java  -jar 'CRFModel.jar' --model-file HAAICRFEXP feature_set_0_test |grep 'Explicability Score :'"        
+            cmd += "java  -jar 'CRFModel.jar' --model-file HAAICRFEXP feature_set_"+str(GLOB_1)+"_test |grep 'Explicability Score :'"        
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
             (out, err) = proc.communicate()
             print("here")
@@ -62,6 +63,7 @@ class SearchNode:
             outarr =str(out).split("Explicability Score :")[1].split("\\n")[0]
             print("EXP score :"+ str(outarr))        
             out = float(outarr.strip())
+            GLOB_1+=1
             return out 
 
         except Exception as e:
