@@ -1,0 +1,3 @@
+move_topx_x1_y2_x2 boxy_y2 boxx_x2 observedy_y2 unloadboxx_x2 observedx_x1 currenty_y2 topx_x0_x1 topx_x1_x2 lefty_y2_y1 righty_y1_y2 lefty_y1_y0 unloadboxy_y2 bottomx_x2_x1 currentx_x2 righty_y0_y1 bottomx_x1_x0 explain_x2 explain_y1 UNEXP
+fetch_box_x2_y2 topx_x0_x1 bottomx_x1_x0 boxy_y2 topx_x1_x2 lefty_y2_y1 boxx_x2 righty_y1_y2 lefty_y1_y0 unloadboxy_y2 unloadboxx_x2 bottomx_x2_x1 fetched_box currenty_y2 righty_y0_y1 currentx_x1 explain_x2 explain_y1 FETCHBOX
+unfetch_box_x2_y2 topx_x0_x1 unfetched_box bottomx_x1_x0 boxy_y2 topx_x1_x2 lefty_y2_y1 boxx_x2 righty_y1_y2 lefty_y1_y0 unloadboxy_y2 unloadboxx_x2 bottomx_x2_x1 currenty_y2 righty_y0_y1 currentx_x1 explain_x2 explain_y1 UNFETCH
