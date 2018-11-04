@@ -7,6 +7,7 @@ PuddleMDPClass.py: Contains the Puddle class from:
 
 # Python imports.
 import math
+import pygame
 import numpy as np
 from collections import defaultdict
 
@@ -18,7 +19,7 @@ from simple_rl.tasks.grid_world.GridWorldStateClass import GridWorldState
 class PuddleMDP2(GridWorldMDP):
     ''' Class for a Puddle MDP '''
 
-    def __init__(self, gamma=0.99, slip_prob=0.00, name="puddle", puddle_rects=[(0.1, 0.8, 0.5, 0.7)], goal_locs=[[1.0, 1.0]], is_goal_terminal=True, rand_init=False, step_cost=0.0):
+    def __init__(self, gamma=0.99, slip_prob=0.00, name="puddle", puddle_rects=[(0.4, 0.7, 0.5, 0.4)], goal_locs=[[1.0, 1.0]], is_goal_terminal=True, rand_init=False, step_cost=0.0):
         '''
         Args:
             gamma (float)
@@ -29,9 +30,11 @@ class PuddleMDP2(GridWorldMDP):
             rand_init (bool)
             step_cost (float)
         '''
-        self.delta = 0.05
+        self.delta = 0.2 #0.05
         self.puddle_rects = puddle_rects
-        GridWorldMDP.__init__(self, width=1.0, height=1.0, init_loc=[0.25, 0.6], goal_locs=goal_locs, gamma=gamma, name=name, is_goal_terminal=is_goal_terminal, rand_init=rand_init, step_cost=step_cost)
+        GridWorldMDP.__init__(self, width=1.0, height=1.0, init_loc=[0.0, 0.4], goal_locs=goal_locs, gamma=gamma, name=name, is_goal_terminal=is_goal_terminal, rand_init=rand_init, step_cost=step_cost)
+        self.screen = pygame.display.set_mode((720,720))
+
 
     def get_parameters(self):
         '''
@@ -50,9 +53,9 @@ class PuddleMDP2(GridWorldMDP):
         if state.is_terminal():
             return 0
         if self._is_goal_state_action(state, action):
-            return 1.0 - self.step_cost
+            return 200.0 - self.step_cost
         elif self._is_puddle_state_action(state, action):
-            return -1.0
+            return -5
         else:
             return 0 - self.step_cost
 
@@ -73,6 +76,23 @@ class PuddleMDP2(GridWorldMDP):
 
         return False
 
+    def is_puddle_location(self, x, y):
+        '''
+        Args:
+            state (simple_rl.State)
+            action (str)
+
+        Returns:
+            (bool)
+        '''
+        for puddle_rect in self.puddle_rects:
+            x_1, y_1, x_2, y_2 = puddle_rect
+            if x >= x_1 and x <= x_2 and \
+                y <= y_1 and y >= y_2:
+                return True
+
+        return False
+
     def _is_goal_state_action(self, state, action):
         '''
         Args:
@@ -83,7 +103,7 @@ class PuddleMDP2(GridWorldMDP):
             (bool): True iff the state-action pair send the agent to the goal state.
         '''
         for g in self.goal_locs:
-            if _euclidean_distance(state.x, state.y, g[0], g[1]) <= self.delta * 2 and self.is_goal_terminal:
+            if _euclidean_distance(state.x, state.y, g[0], g[1]) <= self.delta and self.is_goal_terminal:
                 # Already at terminal.
                 return False
 
@@ -108,9 +128,15 @@ class PuddleMDP2(GridWorldMDP):
             (bool)
         '''
         for g in self.goal_locs:
-            if _euclidean_distance(state_x, state_y, g[0], g[1]) <= self.delta * 2:
+            if _euclidean_distance(state_x, state_y, g[0], g[1]) <= self.delta: #self.delta * 2:
                 return True
         return False
+
+
+    def keep_in_limit(self, curr, to_move):
+        if curr + to_move > 1:
+            return curr
+        return curr + to_move
 
     def _transition_func(self, state, action):
         '''
@@ -125,14 +151,14 @@ class PuddleMDP2(GridWorldMDP):
             return state
 
         noise = np.random.randn(1)[0] / 100.0
-        to_move = self.delta + noise
+        to_move = self.delta #+ noise
 
         if action == "up":
-            next_state = GridWorldState(state.x, min(state.y + to_move, 1))
+            next_state = GridWorldState(state.x, self.keep_in_limit(state.y ,to_move))
         elif action == "down":
             next_state = GridWorldState(state.x, max(state.y - to_move, 0))
         elif action == "right":
-            next_state = GridWorldState(min(state.x + to_move, 1), state.y)
+            next_state = GridWorldState(self.keep_in_limit(state.x ,to_move), state.y)
         elif action == "left":
             next_state = GridWorldState(max(state.x - to_move, 0), state.y)
         else:
@@ -142,6 +168,23 @@ class PuddleMDP2(GridWorldMDP):
             next_state.set_terminal(True)
 
         return next_state
+
+    def visualize_agent(self, agent):
+        from simple_rl.utils import mdp_visualizer as mdpv
+        from puddle_visualizer import _draw_state
+        mdpv.visualize_agent(self, agent, _draw_state)
+        #input("Press anything to quit")
+
+    def visualize_state(self, agent):
+        from simple_rl.utils import mdp_visualizer as mdpv
+        from puddle_visualizer import _draw_state
+        mdpv.visualize_state(self, agent, _draw_state, self.get_curr_state())
+        print("Moving On")
+
+   
+
+    def get_puddle_rects(self):
+        return self.puddle_rects
 
 
 def _euclidean_distance(ax, ay, bx, by):

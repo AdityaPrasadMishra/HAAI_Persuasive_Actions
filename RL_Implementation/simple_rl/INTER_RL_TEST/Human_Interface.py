@@ -30,7 +30,7 @@ class PUDDLER:
         self.base_agent = ModQLearningAgent(actions=self.base_human_model.get_actions(), epsilon=0.5, anneal=True)
         run_single_agent_on_mdp(self.base_agent, self.base_human_model, episodes=10000, steps=60, verbose=True)
         print ("Q func", self.base_agent.q_func)
-        self.test_run = True
+        #self.test_run = True
 
         if self.test_run:
             self.novice_model_1 = self.base_human_model
@@ -42,16 +42,16 @@ class PUDDLER:
             self.fully_actulized_agent = self.base_agent
         else:
             self.novice_model_1 = PuddleMDP2()
-            self.novice_agent_1 = LinearQAgent(actions=self.novice_model_1.get_actions(),num_features=2)
-            run_single_agent_on_mdp(self.novice_agent_1, self.novice_model_1, episodes=10000, steps=4)
+            self.novice_agent_1 = ModQLearningAgent(actions=self.novice_model_1.get_actions(),epsilon=0.5, anneal=True)
+            run_single_agent_on_mdp(self.novice_agent_1, self.novice_model_1, episodes=10000, steps=60, verbose=True)
 
             self.novice_model_2 = PuddleMDP3()
-            self.novice_agent_2 = LinearQAgent(actions=self.novice_model_2.get_actions(),num_features=2)
-            run_single_agent_on_mdp(self.novice_agent_2, self.novice_model_2, episodes=10000, steps=4)
+            self.novice_agent_2 = ModQLearningAgent(actions=self.novice_model_2.get_actions(), epsilon=0.5, anneal=True)
+            run_single_agent_on_mdp(self.novice_agent_2, self.novice_model_2, episodes=10000, steps=60, verbose=True)
 
             self.fully_actulized_model = PuddleMDP4()
-            self.fully_actulized_agent = LinearQAgent(actions=self.fully_actulized_model.get_actions(),num_features=2)
-            run_single_agent_on_mdp(self.fully_actulized_agent, self.fully_actulized_model, episodes=10000, steps=4)
+            self.fully_actulized_agent = ModQLearningAgent(actions=self.fully_actulized_model.get_actions(), epsilon=0.5, anneal=True)
+            run_single_agent_on_mdp(self.fully_actulized_agent, self.fully_actulized_model, episodes=10000, steps=60, verbose=True)
 
 
         # TODO Add other settings
@@ -64,6 +64,7 @@ class PUDDLER:
         return data_points
 
     def get_human_reinf_from_prev_step(self, state, action, explanation_features=[0,0,0]):
+        delta = 0.1
         if explanation_features[2] == 1 or (explanation_features[1] == 1 and explanation_features[0] == 1):
             self.current_mdp = self.fully_actulized_model
             self.current_agent = self.fully_actulized_agent
@@ -79,7 +80,8 @@ class PUDDLER:
 
         curr_best_q_val = self.current_agent.get_value(state)
         curr_q_val = self.current_agent.get_q_value(state, action) 
-        return curr_q_val - curr_best_q_val
+#        return curr_q_val - curr_best_q_val
+        return min((float(curr_best_q_val - curr_q_val)+delta)/(float(curr_best_q_val)+delta),1)
 
 
     def get_possible_actions(self):

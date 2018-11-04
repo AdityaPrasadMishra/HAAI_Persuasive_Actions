@@ -32,7 +32,7 @@ class PuddleMDP(GridWorldMDP):
         '''
         self.delta = 0.2 #0.05
         self.puddle_rects = puddle_rects
-        GridWorldMDP.__init__(self, width=1.0, height=1.0, init_loc=[0.0, 0.0], goal_locs=goal_locs, gamma=gamma, name=name, is_goal_terminal=is_goal_terminal, rand_init=rand_init, step_cost=step_cost)
+        GridWorldMDP.__init__(self, width=1.0, height=1.0, init_loc=[0.0, 0.4], goal_locs=goal_locs, gamma=gamma, name=name, is_goal_terminal=is_goal_terminal, rand_init=rand_init, step_cost=step_cost)
         self.screen = pygame.display.set_mode((720,720))
 
 
