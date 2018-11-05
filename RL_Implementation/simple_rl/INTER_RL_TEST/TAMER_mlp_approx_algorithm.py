@@ -143,68 +143,68 @@ def tamer_algorithm():
     start_time = time.time()
 
     batch_size = 250
-    num_iters = 10000
-#    for i in range(num_iters):
-#        prev_best_action = all_actions[current_act_ind]
-#        model_name = 'nn_model_{}'.format(prev_best_action)
-#        X_train_name = 'X_train_{}'.format(prev_best_action)
-#        y_train_name = 'y_train_{}'.format(prev_best_action)
-#
-#        explanation_features = choose_random_expln_features()
-#        episode_count += 1
-#        # Get the human reward:
-#        h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
-#        aux_y_train[y_train_name].append(h)
-#
-#        print ("prev_best_action",current_state,prev_best_action,h)
-#        xf = explanation_features
-#        aux_X_train[X_train_name].append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
-#        actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
-#        actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
-#
-#        # If have a batch of data ready, train and predict from it
-#        # Update the models if we are on a batch_size iteration
-#        if i % batch_size == 0:
-#            for poss_act in all_actions:
-#                train_weights_file = weights_file_str.format(poss_act)
-#                train_model_name = 'nn_model_{}'.format(poss_act)
-#                train_X_name = 'X_train_{}'.format(poss_act)
-#                train_y_name = 'y_train_{}'.format(poss_act)
-#
-#                curr_model = actions_models[train_model_name]
-#
-#                try:
-#                    curr_model.load_weights(train_weights_file)
-#                except:
-#                    pass
-#                print("----------------------------------")
-#                print "IN ITERATION {}".format(i)
-#                print("TRAINING {}".format(prev_best_action))
-#                X_train = actions_X_train[train_X_name]
-#                y_train = actions_y_train[train_y_name]
-#                if len(X_train) > 0:
-#                    curr_model.fit(X_train, y_train, nb_epoch=20, batch_size=2)
-#                    curr_model.save_weights(train_weights_file)
-#                else:
-#                    print ("actions ",poss_act)
-#
-#        # Get the next state based on action (random for the moment)
-#        new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
-#
-#        # This is the predict part
-#        current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features)
-#        # print ("current action", all_actions[current_act_ind])
-#        current_state = copy.deepcopy(new_state)
-#
-#        if current_state.is_terminal() or episode_count >= EPISODE_LIMIT:
-#            current_state = puddy.get_initial_state()
-#            episode_count = 0
-#
-#    elapsed_time = time.time() - start_time
-#    print ("------------------------------------------------------------")
-#    print (" Elapsed time to train: {}".format(elapsed_time))
-#    print ("------------------------------------------------------------")
-#
+    num_iters = 40000
+    for i in range(num_iters):
+        prev_best_action = all_actions[current_act_ind]
+        model_name = 'nn_model_{}'.format(prev_best_action)
+        X_train_name = 'X_train_{}'.format(prev_best_action)
+        y_train_name = 'y_train_{}'.format(prev_best_action)
+
+        explanation_features = choose_random_expln_features()
+        episode_count += 1
+        # Get the human reward:
+        h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
+        aux_y_train[y_train_name].append(h)
+
+        print ("prev_best_action",current_state,prev_best_action,h)
+        xf = explanation_features
+        aux_X_train[X_train_name].append([current_state.x, current_state.y, current_act_ind, xf[0], xf[1], xf[2]])
+        actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
+        actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
+
+        # If have a batch of data ready, train and predict from it
+        # Update the models if we are on a batch_size iteration
+        if i % batch_size == 0:
+            for poss_act in all_actions:
+                train_weights_file = weights_file_str.format(poss_act)
+                train_model_name = 'nn_model_{}'.format(poss_act)
+                train_X_name = 'X_train_{}'.format(poss_act)
+                train_y_name = 'y_train_{}'.format(poss_act)
+
+                curr_model = actions_models[train_model_name]
+
+                try:
+                    curr_model.load_weights(train_weights_file)
+                except:
+                    pass
+                print("----------------------------------")
+                print "IN ITERATION {}".format(i)
+                print("TRAINING {}".format(poss_act))
+                X_train = actions_X_train[train_X_name]
+                y_train = actions_y_train[train_y_name]
+                if len(X_train) > 0:
+                    curr_model.fit(X_train, y_train, nb_epoch=20, batch_size=2)
+                    curr_model.save_weights(train_weights_file)
+                else:
+                    print ("actions ",poss_act)
+
+        # Get the next state based on action (random for the moment)
+        new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
+
+        # This is the predict part
+        current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features)
+        # print ("current action", all_actions[current_act_ind])
+        current_state = copy.deepcopy(new_state)
+
+        if current_state.is_terminal() or episode_count >= EPISODE_LIMIT:
+            current_state = puddy.get_initial_state()
+            episode_count = 0
+
+    elapsed_time = time.time() - start_time
+    print ("------------------------------------------------------------")
+    print (" Elapsed time to train: {}".format(elapsed_time))
+    print ("------------------------------------------------------------")
+
     # ------------ EVAL --------------  #
     actions_models = load_trained_actions_models(all_actions)
     # -------------------------------- #

@@ -30,7 +30,7 @@ class PUDDLER:
         self.base_agent = ModQLearningAgent(actions=self.base_human_model.get_actions(), epsilon=0.5, anneal=True)
         run_single_agent_on_mdp(self.base_agent, self.base_human_model, episodes=10000, steps=60, verbose=True)
         print ("Q func", self.base_agent.q_func)
-        #self.test_run = True
+        self.test_run = False
 
         if self.test_run:
             self.novice_model_1 = self.base_human_model
