@@ -30,8 +30,8 @@ from LinearTamerApprox import LinearFuncApprox
 #   waitForNextTimestep                                             #
 #####################################################################
 
-epsilon = 0.75
-
+epsilon_init = 0.75
+alpha = 
 explanatory_actions = ["No Explanation", "Puddle #1 is shallow", "Puddle #2 is shallow", "All puddles are shallow"]
 
 
@@ -53,9 +53,11 @@ def get_best_action(state, actions_models, acts, explanation_features):
     print ("best action",i,best_h)
     return best_act
 
-def epsilon_greedy(state, actions_models, acts, explanation_features):
+def epsilon_greedy(state, actions_models, acts, explanation_features, episode_number, step_count):
     # Policy: Epsilon of the time explore, otherwise, greedyQ.
-    global epsilon
+#    global epsilon
+    epsilon = epsilon_init / (1.0 + (step_number / 200.0)*(episode_number + 1) / 2000.0 )
+
     if np.random.random() > epsilon:
         # Exploit.
         action_id = get_best_action(state, actions_models, acts, explanation_features)
@@ -132,8 +134,8 @@ def tamer_algorithm():
     current_act_ind = randint(0, len(all_actions) - 1)
 
     EPISODE_LIMIT = 40
-    episode_count = 0
-
+    step_count = 0
+    episode_number = 0
     actions_models, actions_X_train, actions_y_train, aux_X_train, aux_y_train \
         = get_action_models_and_training_sets(all_actions)
 
@@ -143,7 +145,8 @@ def tamer_algorithm():
     start_time = time.time()
 
     batch_size = 250
-    num_iters = 40000
+    num_iters = 100000
+
     for i in range(num_iters):
         prev_best_action = all_actions[current_act_ind]
         model_name = 'nn_model_{}'.format(prev_best_action)
@@ -151,7 +154,7 @@ def tamer_algorithm():
         y_train_name = 'y_train_{}'.format(prev_best_action)
 
         explanation_features = choose_random_expln_features()
-        episode_count += 1
+        step_count += 1
         # Get the human reward:
         h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
         aux_y_train[y_train_name].append(h)
@@ -192,13 +195,14 @@ def tamer_algorithm():
         new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
 
         # This is the predict part
-        current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features)
+        current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features, episode_number, step_count)
         # print ("current action", all_actions[current_act_ind])
         current_state = copy.deepcopy(new_state)
 
-        if current_state.is_terminal() or episode_count >= EPISODE_LIMIT:
+        if current_state.is_terminal() or step_count >= EPISODE_LIMIT:
             current_state = puddy.get_initial_state()
-            episode_count = 0
+            step_count = 0
+            episode_number +=1
 
     elapsed_time = time.time() - start_time
     print ("------------------------------------------------------------")

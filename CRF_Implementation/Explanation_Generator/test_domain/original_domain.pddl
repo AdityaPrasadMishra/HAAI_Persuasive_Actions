@@ -36,25 +36,25 @@
 (:action move_righty
     :parameters(?ax - xdim ?ay - ydim ?az - ydim)
     :precondition(and(currentx ?ax)(currenty ?ay)(righty ?ay ?az))
-    :effect(and(currenty ?az)(not(currenty ?ay))(observedx ?ax)(observedy ?ay))
+    :effect(and(currenty ?az)(not(currenty ?ay)))
 )
 
 (:action move_lefty
     :parameters(?ax - xdim ?ay - ydim ?az - ydim)
     :precondition(and(currentx ?ax)(currenty ?ay)(lefty ?ay ?az))
-    :effect(and(currenty ?az)(not(currenty ?ay))(observedx ?ax)(observedy ?ay))
+    :effect(and(currenty ?az)(not(currenty ?ay)))
 )
 
 (:action move_topx
     :parameters(?ax - xdim ?ay - ydim ?az - xdim)
     :precondition(and(currentx ?ax)(currenty ?ay)(topx ?ax ?az))
-    :effect(and(currentx ?az)(not(currentx ?ax))(observedx ?ax)(observedy ?ay))
+    :effect(and(currentx ?az)(not(currentx ?ax)))
 )
 
 (:action move_bottomx
     :parameters(?ax - xdim ?ay - ydim ?az - xdim)
     :precondition(and(currentx ?ax)(currenty ?ay)(bottomx ?ax ?az))
-    :effect(and(currentx ?az)(not(currentx ?ax))(observedx ?ax)(observedy ?ay))
+    :effect(and(currentx ?az)(not(currentx ?ax)))
 )
 
 
@@ -68,5 +68,11 @@
     :parameters(?ax - xdim ?ay - ydim)
     :precondition(and(currentx ?ax)(currenty ?ay)(fetched_box)(not(unfetched_box))(unloadboxx ?ax)(unloadboxy ?ay))
     :effect(and(not(fetched_box))(unfetched_box))
+)
+
+(:action waiting
+    :parameters(?ax - xdim ?ay - ydim)
+    :precondition(and(currentx ?ax)(currenty ?ay) (unfetched_box))
+    :effect(and (observedx ?ax)(observedy ?ay))
 )
 )
