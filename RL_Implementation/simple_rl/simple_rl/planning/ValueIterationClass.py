@@ -12,6 +12,7 @@ else:
 
 # Other imports.
 from simple_rl.planning.PlannerClass import Planner
+import copy
 
 class ValueIteration(Planner):
 
@@ -35,6 +36,8 @@ class ValueIteration(Planner):
         self.bellman_backups = 0
         self.trans_dict = defaultdict(lambda:defaultdict(lambda:defaultdict(float)))
 
+        #print (self.reward_func)
+
     def _compute_matrix_from_trans_func(self):
         if self.has_computed_matrix:
             self._compute_reachable_state_space()
@@ -50,6 +53,7 @@ class ValueIteration(Planner):
             for a in self.actions:
                 for sample in range(self.sample_rate):
                     s_prime = self.transition_func(s, a)
+                    print (s,a,s_prime)
                     self.trans_dict[s][a][s_prime] += 1.0 / self.sample_rate
 
         self.has_computed_matrix = True
@@ -91,8 +95,8 @@ class ValueIteration(Planner):
         # Compute expected value.
         expected_future_val = 0
         for s_prime in self.trans_dict[s][a].keys():
-            expected_future_val += self.trans_dict[s][a][s_prime] * self.value_func[s_prime]
-
+            expected_future_val += self.trans_dict[s][a][s_prime] * self.value_func[str(s_prime)]
+        #print ("self.gamma",self.gamma)
         return self.reward_func(s,a) + self.gamma*expected_future_val
 
     def _compute_reachable_state_space(self):
@@ -109,15 +113,19 @@ class ValueIteration(Planner):
         state_queue.put(self.init_state)
         self.states.add(self.init_state)
 
+        reached_states = []
+
         while not state_queue.empty():
             s = state_queue.get()
             for a in self.actions:
                 for samples in range(self.sample_rate): # Take @sample_rate samples to estimate E[V]
                     next_state = self.transition_func(s,a)
+                    next_state_str = str(next_state)
 
-                    if next_state not in self.states:
+                    if next_state_str not in reached_states:
                         self.states.add(next_state)
                         state_queue.put(next_state)
+                        reached_states.append(next_state_str)
 
         self.reachability_done = True
 
@@ -136,10 +144,16 @@ class ValueIteration(Planner):
         self._compute_matrix_from_trans_func()
         state_space = self.get_states()
         self.bellman_backups = 0
-
+        #exit(1)
+        #print (state_space, len(state_space))
+        #print (len(self.value_func))
         # Main loop.
+        #print (len(state_space))
+        #exit(0)
         while max_diff > self.delta and iterations < self.max_iterations:
             max_diff = 0
+            new_value_func = defaultdict(float)
+
             for s in state_space:
                 self.bellman_backups += 1
                 if s.is_terminal():
@@ -148,18 +162,21 @@ class ValueIteration(Planner):
                 max_q = float("-inf")
                 for a in self.actions:
                     q_s_a = self.get_q_value(s, a)
+                    print ("Q value",s,a,q_s_a)
                     max_q = q_s_a if q_s_a > max_q else max_q
 
                 # Check terminating condition.
-                max_diff = max(abs(self.value_func[s] - max_q), max_diff)
+                max_diff = max(abs(self.value_func[str(s)] - max_q), max_diff)
 
                 # Update value.
-                self.value_func[s] = max_q
-            iterations += 1
+                new_value_func[str(s)] = max_q
+            self.value_func = copy.deepcopy(new_value_func)
 
+            iterations += 1
+            print ("stats:",max_diff,iterations,len(self.value_func))
         value_of_init_state = self._compute_max_qval_action_pair(self.init_state)[0]
         self.has_planned = True
-
+        #exit(1)
         return iterations, value_of_init_state
 
     def get_num_backups_in_recent_run(self):
