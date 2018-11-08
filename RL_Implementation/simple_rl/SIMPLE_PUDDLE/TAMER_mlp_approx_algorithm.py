@@ -76,18 +76,21 @@ def choose_random_expln_features():
     exp_id += 1
 
     #exp = random.choice(explanatory_actions)
+    exp = random.randint(1,4)
 
-    if exp_id % 2 == 0:
-        return [1]
-    else:
+    if exp % 2 == 0:
         return [0]
+    else:
+        return [1]
 
 def make_model():
     model = Sequential()
 
-    model.add(Dense(10, input_shape=(3,)))
+    model.add(Dense(10, input_shape=(3,), activation="sigmoid"))
+    model.add(Dense(10, activation="sigmoid"))
+    model.add(Dense(5))
     model.add(Dense(1))
-    model.compile(optimizer='sgd', loss=['mean_absolute_error'], metrics=['accuracy'])
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
     return model
 
 def get_action_models_and_training_sets(actions):
@@ -145,44 +148,69 @@ def tamer_algorithm():
     start_time = time.time()
 
     batch_size = 250
-    num_iters = 10000
-
-    for i in range(num_iters):
-        prev_best_action = all_actions[current_act_ind]
-        model_name = 'nn_model_{}'.format(prev_best_action)
-        X_train_name = 'X_train_{}'.format(prev_best_action)
-        y_train_name = 'y_train_{}'.format(prev_best_action)
-
-        explanation_features = choose_random_expln_features()
-        print (explanation_features)
-        step_count += 1
-        # Get the human reward:
-        h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
-        aux_y_train[y_train_name].append(h)
-
-        print ("prev_best_action",current_state,prev_best_action,h)
-        xf = explanation_features
-        aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0]])
-        actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
-        actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
-
-        # If have a batch of data ready, train and predict from it
-        # Update the models if we are on a batch_size iteration
-        if i % batch_size == 0:
-            for poss_act in all_actions:
-                train_weights_file = weights_file_str.format(poss_act)
-                train_model_name = 'nn_model_{}'.format(poss_act)
-                train_X_name = 'X_train_{}'.format(poss_act)
-                train_y_name = 'y_train_{}'.format(poss_act)
-
-                curr_model = actions_models[train_model_name]
-
-                try:
-                    curr_model.load_weights(train_weights_file)
-                except:
-                    pass
-                print("----------------------------------")
-                print "IN ITERATION {}".format(i)
+#    num_iters = 50000
+#    number_of_no_exp = 0
+#    number_of_exp = 0
+#    for i in range(num_iters):
+#        prev_best_action = all_actions[current_act_ind]
+#        model_name = 'nn_model_{}'.format(prev_best_action)
+#        X_train_name = 'X_train_{}'.format(prev_best_action)
+#        y_train_name = 'y_train_{}'.format(prev_best_action)
+#
+#        explanation_features = choose_random_expln_features()
+#        if explanation_features[0] > 0.5:
+#            number_of_exp += 1
+#        else:
+#            number_of_no_exp +=1
+#        print (explanation_features)
+#        step_count += 1
+#        # Get the human reward:
+#        h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
+#        aux_y_train[y_train_name].append(h)
+#
+#        print ("prev_best_action",current_state,prev_best_action,h)
+#        xf = explanation_features
+#        aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0]])
+#        actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
+#        actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
+#
+#
+#        #explanation_features = choose_random_expln_features()
+#        #
+#        #if explanation_features[0] > 0.5:
+#        #    number_of_exp += 1
+#        #else:
+#        #    number_of_no_exp +=1
+#        #print (explanation_features)
+#        #step_count += 1
+#        # Get the human reward:
+#        #h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
+#        #aux_y_train[y_train_name].append(h)
+#
+#        #print ("prev_best_action",current_state,prev_best_action,h)
+#        #xf = explanation_features
+#        #aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0]])
+#        #actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
+#        #actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
+#
+#
+#        # If have a batch of data ready, train and predict from it
+#        # Update the models if we are on a batch_size iteration
+#        if i % batch_size == 0:
+#            for poss_act in all_actions:
+#                train_weights_file = weights_file_str.format(poss_act)
+#                train_model_name = 'nn_model_{}'.format(poss_act)
+#                train_X_name = 'X_train_{}'.format(poss_act)
+#                train_y_name = 'y_train_{}'.format(poss_act)
+#
+#                curr_model = actions_models[train_model_name]
+#
+#                try:
+#                    curr_model.load_weights(train_weights_file)
+#                except:
+#                    pass
+#                print("----------------------------------")
+#                print "IN ITERATION {}".format(i)
 #                print("TRAINING {}".format(poss_act))
 #                X_train = actions_X_train[train_X_name]
 #                y_train = actions_y_train[train_y_name]
@@ -209,10 +237,11 @@ def tamer_algorithm():
 #    print ("------------------------------------------------------------")
 #    print (" Elapsed time to train: {}".format(elapsed_time))
 #    print ("------------------------------------------------------------")
-
-   # ------------ EVAL --------------  #
+#    print ("No of explanation examples", number_of_exp)
+#    print ("No of no explanation examples", number_of_no_exp)
+#   # ------------ EVAL --------------  #
     actions_models = load_trained_actions_models(all_actions)
-    # -------------------------------- #
+#    # -------------------------------- #
 
 #    explanation_features = [0]
 #    # Test the policy
@@ -231,22 +260,40 @@ def tamer_algorithm():
 #        curr_char = raw_input("")
 #
 #
-#    explanation_features = [1]
-#    # Test the policy
-#    current_state = puddy.get_initial_state()
-#    print("Start from state", current_state)
-#    curr_char = "S"
-#    puddy.visualize_agent(current_state)
-#    curr_char = raw_input("")
-#    while curr_char.lower() != 'n':
-#        a = puddy.get_best_action(current_state, explanation_features)
-#        print("Next action", a)
-#        next_state = puddy.get_next_state(current_state, a)
-#        print("New state", next_state)
-#        current_state = copy.deepcopy(next_state)
-#        puddy.visualize_agent(current_state)
-#        curr_char = raw_input("")
-#
+    explanation_features = [1]
+    # Test the policy
+    current_state = puddy.get_initial_state()
+    print("Start from state", current_state)
+    curr_char = "S"
+    puddy.visualize_agent(current_state)
+    curr_char = raw_input("")
+    while curr_char.lower() != 'n':
+        a = puddy.get_best_action(current_state, explanation_features)
+        print("Next action", a)
+        next_state = puddy.get_next_state(current_state, a)
+        print("New state", next_state)
+        current_state = copy.deepcopy(next_state)
+        puddy.visualize_agent(current_state)
+        curr_char = raw_input("")
+
+
+
+    explanation_features = [0]
+    current_state = puddy.get_initial_state()
+    print("Best action from tamer",
+          all_actions[get_best_action(current_state, actions_models, all_actions, explanation_features)])
+
+    puddy.visualize_agent(current_state)
+    curr_char = raw_input("")
+    while curr_char.lower() != 'n':
+        a = all_actions[get_best_action(current_state, actions_models, all_actions, explanation_features)]
+        print("Next action", a)
+        next_state = puddy.get_next_state(current_state, a)
+        print("New state", next_state)
+        current_state = copy.deepcopy(next_state)
+        puddy.visualize_agent(current_state)
+        curr_char = raw_input("")
+
 
 
     explanation_features = [1]

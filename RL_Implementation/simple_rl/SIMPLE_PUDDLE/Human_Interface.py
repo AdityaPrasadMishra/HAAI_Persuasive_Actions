@@ -77,7 +77,7 @@ class PUDDLER:
         return self.base_human_model.get_actions()
 
     def get_best_action(self,state, explanation_features=[0]):
-        if explanation_features[0] == 1:
+        if explanation_features[0] >= 0.5:
             self.current_mdp = self.fully_actulized_model
             self.current_agent = self.fully_actulized_agent
         else:
@@ -95,7 +95,7 @@ class PUDDLER:
         return self.base_human_model.get_init_state().features()
 
     def get_next_state(self,state,act, explanation_features=[0]):
-        if explanation_features[0] == 1:
+        if explanation_features[0] >= 0.5:
             self.current_mdp = self.fully_actulized_model
             self.current_agent = self.fully_actulized_agent
         else:
