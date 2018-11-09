@@ -31,19 +31,20 @@ from LinearTamerApprox import LinearFuncApprox
 #####################################################################
 
 epsilon_init = 0.75
-#alpha = 
+# alpha =
 explanatory_actions = ["No Explanation", "Puddle #1 is shallow", "Puddle #2 is shallow", "All puddles are shallow"]
 exp_id = 0
+
 
 def get_best_action(state, actions_models, acts, explanation_features):
     # In this function we have to select the best action to take
     xf = explanation_features
     best_act = 0
-    #best_h = -1 * np.inf
+    # best_h = -1 * np.inf
     best_h = np.inf
 
     for i, act in enumerate(acts):
-        X_to_predict = np.array([[state.x, state.y, xf[0]]])
+        X_to_predict = np.array([[state.x, state.y, xf[0], xf[1], xf[2]]])
 
         model_name = 'nn_model_{}'.format(act)
         aux = actions_models[model_name].predict(X_to_predict).flatten()[0]
@@ -51,13 +52,14 @@ def get_best_action(state, actions_models, acts, explanation_features):
             best_h = aux
             best_act = i
 
-    print ("best action",i,best_h)
+    print ("best action", i, best_h)
     return best_act
+
 
 def epsilon_greedy(state, actions_models, acts, explanation_features, episode_number, step_count):
     # Policy: Epsilon of the time explore, otherwise, greedyQ.
-#    global epsilon
-    epsilon = epsilon_init / (1.0 + (step_count / 200.0)*(episode_number + 1) / 2000.0 )
+    #    global epsilon
+    epsilon = epsilon_init / (1.0 + (step_count / 200.0) * (episode_number + 1) / 2000.0)
 
     if np.random.random() > epsilon:
         # Exploit.
@@ -75,23 +77,35 @@ def choose_random_expln_features():
 
     exp_id += 1
 
-    #exp = random.choice(explanatory_actions)
-    exp = random.randint(1,4)
+    exp = random.choice(explanatory_actions)
 
-    if exp % 2 == 0:
-        return [0]
-    else:
-        return [1]
+    if explanatory_actions.index(exp) == 0:
+        return [0, 0, 0]
+    elif explanatory_actions.index(exp) == 1:
+        return [1, 0, 0]
+    elif explanatory_actions.index(exp) == 2:
+        return [0, 1, 0]
+    elif explanatory_actions.index(exp) == 3:
+        return [0, 0, 1]
+
+    # exp = random.randint(1, 4)
+    # if exp % 2 == 0:
+    #     return [0]
+    # else:
+    #     return [1]
+
 
 def make_model():
     model = Sequential()
 
-    model.add(Dense(10, input_shape=(3,), activation="sigmoid"))
-    model.add(Dense(10, activation="sigmoid"))
+    model.add(Dense(15, input_shape=(5,), activation="sigmoid"))
+    model.add(Dense(15, activation="sigmoid"))
     model.add(Dense(5))
     model.add(Dense(1))
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
+
     return model
+
 
 def get_action_models_and_training_sets(actions):
     actions_models = {}
@@ -149,41 +163,23 @@ def train_action_models(weights_file_str, all_actions, puddy):
         if explanation_features[0] > 0.5:
             number_of_exp += 1
         else:
-            number_of_no_exp +=1
+            number_of_no_exp += 1
 
         print (explanation_features)
         step_count += 1
+
         # Get the human reward:
         h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
         aux_y_train[y_train_name].append(h)
 
-        print ("prev_best_action",current_state,prev_best_action,h)
+        print ("prev_best_action", current_state, prev_best_action, h)
         xf = explanation_features
-        aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0]])
+        aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0], xf[1], xf[2]])
         actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
         actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
 
-       #explanation_features = choose_random_expln_features()
-       #
-       #if explanation_features[0] > 0.5:
-       #    number_of_exp += 1
-       #else:
-       #    number_of_no_exp +=1
-       #print (explanation_features)
-       #step_count += 1
-       # Get the human reward:
-       #h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
-       #aux_y_train[y_train_name].append(h)
-
-       #print ("prev_best_action",current_state,prev_best_action,h)
-       #xf = explanation_features
-       #aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0]])
-       #actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
-       #actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
-
-
-       # If have a batch of data ready, train and predict from it
-       # Update the models if we are on a batch_size iteration
+        # If have a batch of data ready, train and predict from it
+        # Update the models if we are on a batch_size iteration
         if i % batch_size == 0:
             for poss_act in all_actions:
                 train_weights_file = weights_file_str.format(poss_act)
@@ -202,6 +198,10 @@ def train_action_models(weights_file_str, all_actions, puddy):
                 print("TRAINING {}".format(poss_act))
                 X_train = actions_X_train[train_X_name]
                 y_train = actions_y_train[train_y_name]
+                # if len(X_train):
+                #     np.savetxt('X_train_3f_{}.txt'.format(poss_act), X_train, fmt='%f')
+                #     np.savetxt('y_train_3f_{}.txt'.format(poss_act), y_train, fmt='%f')
+
                 if len(X_train) > 0:
                     curr_model.fit(X_train, y_train, nb_epoch=20, batch_size=2)
                     curr_model.save_weights(train_weights_file)
@@ -212,7 +212,8 @@ def train_action_models(weights_file_str, all_actions, puddy):
         new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
 
         # This is the predict part
-        current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features, episode_number, step_count)
+        current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features, episode_number,
+                                         step_count)
         # print ("current action", all_actions[current_act_ind])
         current_state = copy.deepcopy(new_state)
 
@@ -233,27 +234,27 @@ def tamer_algorithm():
     save_weights_file = 'weights/weights_{}.hdf5'
     load_weights_file = 'working_weights/weights_{}.hdf5'
 
-    # train_action_models(save_weights_file, all_actions, puddy)
+    train_action_models(save_weights_file, all_actions, puddy)
 
-    actions_models = load_trained_actions_models(all_actions, load_weights_file)
+    # actions_models = load_trained_actions_models(all_actions, load_weights_file)
 
-#    explanation_features = [0]
-#    # Test the policy
-#    current_state = puddy.get_initial_state()
-#    print("Start from state", current_state)
-#    curr_char = "S"
-#    puddy.visualize_agent(current_state)
-#    curr_char = raw_input("")
-#    while curr_char.lower() != 'n':
-#        a = puddy.get_best_action(current_state, explanation_features)
-#        print("Next action", a)
-#        next_state = puddy.get_next_state(current_state, a)
-#        print("New state", next_state)
-#        current_state = copy.deepcopy(next_state)
-#        puddy.visualize_agent(current_state)
-#        curr_char = raw_input("")
-#
-#
+    #    explanation_features = [0]
+    #    # Test the policy
+    #    current_state = puddy.get_initial_state()
+    #    print("Start from state", current_state)
+    #    curr_char = "S"
+    #    puddy.visualize_agent(current_state)
+    #    curr_char = raw_input("")
+    #    while curr_char.lower() != 'n':
+    #        a = puddy.get_best_action(current_state, explanation_features)
+    #        print("Next action", a)
+    #        next_state = puddy.get_next_state(current_state, a)
+    #        print("New state", next_state)
+    #        current_state = copy.deepcopy(next_state)
+    #        puddy.visualize_agent(current_state)
+    #        curr_char = raw_input("")
+    #
+    #
     explanation_features = [1]
     # Test the policy
     current_state = puddy.get_initial_state()
@@ -270,8 +271,6 @@ def tamer_algorithm():
         puddy.visualize_agent(current_state)
         curr_char = raw_input("")
 
-
-
     explanation_features = [0]
     current_state = puddy.get_initial_state()
     print("Best action from tamer",
@@ -287,8 +286,6 @@ def tamer_algorithm():
         current_state = copy.deepcopy(next_state)
         puddy.visualize_agent(current_state)
         curr_char = raw_input("")
-
-
 
     explanation_features = [1]
     current_state = puddy.get_initial_state()
