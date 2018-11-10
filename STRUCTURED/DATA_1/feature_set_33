@@ -1,0 +1,4 @@
+2 2 2 2 2 2 3 3 0 2 fetch_box_x0_y0
+2 2 2 2 2 2 3 3 0 2 move_topx_x0_y0_x1
+2 2 2 2 2 2 3 3 0 2 unfetch_box_x1_y0
+2 2 2 2 2 2 3 3 0 2 waiting_x0_y2

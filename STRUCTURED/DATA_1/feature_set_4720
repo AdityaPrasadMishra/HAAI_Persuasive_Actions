@@ -1,0 +1,4 @@
+2 2 2 2 2 2 3 3 3 3 move_lefty_x2_y2_y1
+2 2 2 2 2 2 3 3 3 3 fetch_box_x2_y1
+2 2 2 2 2 2 3 3 3 3 move_righty_x2_y1_y2
+2 2 2 2 2 2 3 3 3 3 unfetch_box_x2_y2
