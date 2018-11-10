@@ -66,7 +66,7 @@ def _draw_state(screen,
     cell_width = (scr_width - width_buffer * 2) / 10 #pudd_mdp.width
     cell_height = (scr_height - height_buffer * 2) / 10 # pudd_mdp.height
     goal_locs = pudd_mdp.get_goal_locs()
-    puddle_rects = pudd_mdp.get_puddle_rects()
+    # puddle_rects = pudd_mdp.get_puddle_rects()
     font_size = int(min(cell_width, cell_height) / 4.0)
     reg_font = pygame.font.SysFont("CMU Serif", font_size)
     cc_font = pygame.font.SysFont("Courier", font_size*2 + 2)

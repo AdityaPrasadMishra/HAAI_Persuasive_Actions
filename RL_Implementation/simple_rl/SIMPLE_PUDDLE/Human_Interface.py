@@ -14,6 +14,10 @@ from simple_rl.run_experiments import run_single_agent_on_mdp
 # Two Puddles
 from simple_rl.tasks.puddle.PuddleMDPClass import PuddleMDP
 # No puddles
+from simple_rl.tasks.puddle.PuddleMDPClass2 import PuddleMDP2
+# No puddles
+from simple_rl.tasks.puddle.PuddleMDPClass3 import PuddleMDP3
+# No puddles
 from simple_rl.tasks.puddle.PuddleMDPClass4 import PuddleMDP4
 
 from simple_rl.planning.ValueIterationClass import ValueIteration 
@@ -41,6 +45,17 @@ class PUDDLER:
             self.novice_agent_2 = self.base_agent
             self.fully_actulized_agent = self.base_agent
         else:
+
+            self.novice_model_1 = PuddleMDP2()
+            self.novice_agent_1 = ValueIteration(self.novice_model_1)
+            self.novice_agent_1.run_vi()
+            
+
+            self.novice_model_2 = PuddleMDP3()
+            self.novice_agent_2 = ValueIteration(self.novice_model_2)
+            self.novice_agent_2.run_vi()
+
+
             self.fully_actulized_model = PuddleMDP4()
             self.fully_actulized_agent = ValueIteration(self.fully_actulized_model)
             self.fully_actulized_agent.run_vi()
@@ -57,12 +72,18 @@ class PUDDLER:
         data_points = []
         return data_points
 
-    def get_human_reinf_from_prev_step(self, state, action, explanation_features=[0]):
+    def get_human_reinf_from_prev_step(self, state, action, explanation_features=[0,0,0]):
         delta = 0.1
         print (explanation_features)
-        if explanation_features[0] == 1:
+        if explanation_features[2] == 1 or (explanation_features[1] == 1 and explanation_features[0] == 1):
             self.current_mdp = self.fully_actulized_model
             self.current_agent = self.fully_actulized_agent
+        elif explanation_features[0] == 1:
+            self.current_mdp = self.novice_model_1
+            self.current_agent = self.novice_agent_1
+        elif explanation_features[1] == 1:
+            self.current_mdp = self.novice_model_2
+            self.current_agent = self.novice_agent_2
         else:
             self.current_mdp = self.base_human_model
             self.current_agent = self.base_agent
@@ -76,10 +97,16 @@ class PUDDLER:
     def get_possible_actions(self):
         return self.base_human_model.get_actions()
 
-    def get_best_action(self,state, explanation_features=[0]):
-        if explanation_features[0] >= 0.5:
+    def get_best_action(self,state, explanation_features=[0,0,0]):
+        if explanation_features[2] == 1 or (explanation_features[1] == 1 and explanation_features[0] == 1):
             self.current_mdp = self.fully_actulized_model
             self.current_agent = self.fully_actulized_agent
+        elif explanation_features[0] == 1:
+            self.current_mdp = self.novice_model_1
+            self.current_agent = self.novice_agent_1
+        elif explanation_features[1] == 1:
+            self.current_mdp = self.novice_model_2
+            self.current_agent = self.novice_agent_2
         else:
             self.current_mdp = self.base_human_model
             self.current_agent = self.base_agent
@@ -107,6 +134,21 @@ class PUDDLER:
         return new_state
 
     #def is_current_state_terminal(self,state):
+
+    def return_state(self,x, y):
+
+        #if explanation_features[0] >= 0.5:
+        #    self.current_mdp = self.fully_actulized_model
+        #    self.current_agent = self.fully_actulized_agent
+        #else:
+        #    self.current_mdp = self.base_human_model
+        #    self.current_agent = self.base_agent
+
+        state = GridWorldState(x,y)
+
+        #self.current_mdp.set_state(state)
+        #reward, new_state = self.current_mdp.execute_agent_action(act)
+        return state
 
     def visualize_agent(self, state):
         self.base_human_model.set_state(state)

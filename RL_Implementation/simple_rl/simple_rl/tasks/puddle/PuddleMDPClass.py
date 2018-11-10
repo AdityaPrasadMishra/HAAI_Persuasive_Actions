@@ -15,6 +15,7 @@ from collections import defaultdict
 from simple_rl.mdp.MDPClass import MDP
 from simple_rl.tasks.grid_world.GridWorldMDPClass import GridWorldMDP
 from simple_rl.tasks.grid_world.GridWorldStateClass import GridWorldState
+import random
 
 class PuddleMDP(GridWorldMDP):
     ''' Class for a Puddle MDP '''
@@ -181,9 +182,12 @@ class PuddleMDP(GridWorldMDP):
         mdpv.visualize_state(self, agent, _draw_state, self.get_curr_state())
         print("Moving On")
 
-   
+    def get_init_state(self):
+        x = random.choice([0.0, 0.2, 0.4, 0.6, 0.8, 1])
+        y = random.choice([0.0, 0.2, 0.4, 0.6, 0.8, 1])
+        return  GridWorldState(x, y)
 
-    def get_puddle_rects(self):
+def get_puddle_rects(self):
         return self.puddle_rects
 
 

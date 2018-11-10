@@ -232,47 +232,31 @@ def tamer_algorithm():
     puddy = PUDDLER()
     all_actions = puddy.get_possible_actions()
     save_weights_file = 'weights/weights_{}.hdf5'
-    load_weights_file = 'working_weights/weights_{}.hdf5'
+    load_weights_file = 'weights-test/weights_{}.hdf5'
 
-    train_action_models(save_weights_file, all_actions, puddy)
+    # train_action_models(save_weights_file, all_actions, puddy)
 
-    # actions_models = load_trained_actions_models(all_actions, load_weights_file)
+    actions_models = load_trained_actions_models(all_actions, load_weights_file)
 
-    #    explanation_features = [0]
-    #    # Test the policy
-    #    current_state = puddy.get_initial_state()
-    #    print("Start from state", current_state)
-    #    curr_char = "S"
-    #    puddy.visualize_agent(current_state)
-    #    curr_char = raw_input("")
-    #    while curr_char.lower() != 'n':
-    #        a = puddy.get_best_action(current_state, explanation_features)
-    #        print("Next action", a)
-    #        next_state = puddy.get_next_state(current_state, a)
-    #        print("New state", next_state)
-    #        current_state = copy.deepcopy(next_state)
-    #        puddy.visualize_agent(current_state)
-    #        curr_char = raw_input("")
-    #
-    #
-    explanation_features = [1]
-    # Test the policy
-    current_state = puddy.get_initial_state()
-    print("Start from state", current_state)
-    curr_char = "S"
-    puddy.visualize_agent(current_state)
-    curr_char = raw_input("")
-    while curr_char.lower() != 'n':
-        a = puddy.get_best_action(current_state, explanation_features)
-        print("Next action", a)
-        next_state = puddy.get_next_state(current_state, a)
-        print("New state", next_state)
-        current_state = copy.deepcopy(next_state)
-        puddy.visualize_agent(current_state)
-        curr_char = raw_input("")
+    # explanation_features = [0,0,0]
+    # # Test the policy
+    # current_state = puddy.return_state(0,0.2) #get_initial_state()
+    # print("Start from state", current_state)
+    # curr_char = "S"
+    # puddy.visualize_agent(current_state)
+    # curr_char = raw_input("")
+    # while curr_char.lower() != 'n':
+    #     a = puddy.get_best_action(current_state, explanation_features)
+    #     print("Next action", a)
+    #     next_state = puddy.get_next_state(current_state, a)
+    #     print("New state", next_state)
+    #     current_state = copy.deepcopy(next_state)
+    #     puddy.visualize_agent(current_state)
+    #     curr_char = raw_input("")
 
-    explanation_features = [0]
-    current_state = puddy.get_initial_state()
+    explanation_features = [0, 0, 0]
+    # current_state = puddy.get_initial_state()
+    current_state = puddy.return_state(0,0.2)
     print("Best action from tamer",
           all_actions[get_best_action(current_state, actions_models, all_actions, explanation_features)])
 
