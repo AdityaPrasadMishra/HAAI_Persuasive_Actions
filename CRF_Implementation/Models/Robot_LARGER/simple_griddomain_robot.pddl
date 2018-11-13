@@ -72,7 +72,7 @@
 
 (:action waiting
     :parameters(?ax - xdim ?ay - ydim)
-    :precondition(and(unfetched_box) (currentx ?ax)(currenty ?ay) )
+    :precondition(and(unfetched_box))
     :effect(and (observedx ?ax)(observedy ?ay))
 )
 )

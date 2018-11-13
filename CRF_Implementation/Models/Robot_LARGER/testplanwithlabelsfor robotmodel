@@ -1,0 +1,17 @@
+(MOVE_BOTTOM A D) -> Fetch_box(Human)
+(MOVE_RIGHT D E) -> Fetch_box(Human)
+(MOVE_RIGHT E F) -> Fetch_box(Human)
+(MOVE_TOP F C) -> Fetch_box(Human)
+(FETCH_BOX C) -> Fetch_box(Human)
+(MOVE_BOTTOM C F)-> Unfetch_box(Human)
+(UNFETCH_BOX F)-> UnFetch_box(Human)
+
+-------------------------------------------------------
+
+(MOVE_BOTTOM A D) -> Observe(Robot)
+(MOVE_RIGHT D E) -> Fetch_box(Robot)
+(MOVE_RIGHT E F) -> Fetch_box(Robot)
+(MOVE_TOP F C) -> Fetch_box(Robot)
+(FETCH_BOX C) -> Fetch_box(Robot)
+(MOVE_BOTTOM C F)-> Unfetch_box(Robot)
+(UNFETCH_BOX F)-> UnFetch_box(Robot)
