@@ -99,6 +99,7 @@ def make_model():
     model.add(Dense(5))
     model.add(Dense(1))
     model.compile(optimizer='adam', loss='mean_squared_error', metrics=['accuracy'])
+
     return model
 
 def get_action_models_and_training_sets(actions):
@@ -118,7 +119,7 @@ def get_action_models_and_training_sets(actions):
 
 
 def load_trained_actions_models(actions):
-    weights_file_str = 'weights/weights_{}.hdf5'
+    weights_file_str = 'weights-test/weights_{}.hdf5'
     actions_models = {}
 
     # Init each model
@@ -159,97 +160,98 @@ def tamer_algorithm():
     num_iters = 100000
     number_of_no_exp = 0
     number_of_exp = 0
-    for i in range(num_iters):
-        prev_best_action = all_actions[current_act_ind]
-        model_name = 'nn_model_{}'.format(prev_best_action)
-        X_train_name = 'X_train_{}'.format(prev_best_action)
-        y_train_name = 'y_train_{}'.format(prev_best_action)
+    # for i in range(num_iters):
+    #     prev_best_action = all_actions[current_act_ind]
+    #     model_name = 'nn_model_{}'.format(prev_best_action)
+    #     X_train_name = 'X_train_{}'.format(prev_best_action)
+    #     y_train_name = 'y_train_{}'.format(prev_best_action)
+    #
+    #     explanation_features = choose_random_expln_features()
+    #     if explanation_features[0] > 0.5:
+    #         number_of_exp += 1
+    #     else:
+    #         number_of_no_exp +=1
+    #     print (explanation_features)
+    #     step_count += 1
+    #     # Get the human reward:
+    #     h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
+    #     aux_y_train[y_train_name].append(h)
+    #
+    #     print ("prev_best_action",current_state,prev_best_action,h)
+    #     xf = explanation_features
+    #     aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0], xf[1]])
+    #     actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
+    #     actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
+    #
+    #
+    #     #explanation_features = choose_random_expln_features()
+    #     #
+    #     #if explanation_features[0] > 0.5:
+    #     #    number_of_exp += 1
+    #     #else:
+    #     #    number_of_no_exp +=1
+    #     #print (explanation_features)
+    #     #step_count += 1
+    #     # Get the human reward:
+    #     #h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
+    #     #aux_y_train[y_train_name].append(h)
+    #
+    #     #print ("prev_best_action",current_state,prev_best_action,h)
+    #     #xf = explanation_features
+    #     #aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0]])
+    #     #actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
+    #     #actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
+    #
+    #
+    #     # If have a batch of data ready, train and predict from it
+    #     # Update the models if we are on a batch_size iteration
+    #     if i % batch_size == 0:
+    #         for poss_act in all_actions:
+    #             train_weights_file = weights_file_str.format(poss_act)
+    #             train_model_name = 'nn_model_{}'.format(poss_act)
+    #             train_X_name = 'X_train_{}'.format(poss_act)
+    #             train_y_name = 'y_train_{}'.format(poss_act)
+    #
+    #             curr_model = actions_models[train_model_name]
+    #
+    #             try:
+    #                 curr_model.load_weights(train_weights_file)
+    #             except:
+    #                 pass
+    #             print("----------------------------------")
+    #             print "IN ITERATION {}".format(i)
+    #             print("TRAINING {}".format(poss_act))
+    #             X_train = actions_X_train[train_X_name]
+    #             y_train = actions_y_train[train_y_name]
+    #             if len(X_train) > 0:
+    #                 curr_model.fit(X_train, y_train, nb_epoch=20, batch_size=2)
+    #                 curr_model.save_weights(train_weights_file)
+    #             else:
+    #                 print ("actions ",poss_act)
+    #
+    #     # Get the next state based on action (random for the moment)
+    #     new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
+    #
+    #     # This is the predict part
+    #     current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features, episode_number, step_count)
+    #     # print ("current action", all_actions[current_act_ind])
+    #     current_state = copy.deepcopy(new_state)
+    #
+    #     if current_state.is_terminal() or step_count >= EPISODE_LIMIT:
+    #         current_state = puddy.get_initial_state()
+    #         step_count = 0
+    #         episode_number +=1
+    #
+    # elapsed_time = time.time() - start_time
+    # print ("------------------------------------------------------------")
+    # print (" Elapsed time to train: {}".format(elapsed_time))
+    # print ("------------------------------------------------------------")
+    # print ("No of explanation examples", number_of_exp)
+    # print ("No of no explanation examples", number_of_no_exp)
 
-        explanation_features = choose_random_expln_features()
-        if explanation_features[0] > 0.5:
-            number_of_exp += 1
-        else:
-            number_of_no_exp +=1
-        print (explanation_features)
-        step_count += 1
-        # Get the human reward:
-        h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
-        aux_y_train[y_train_name].append(h)
-
-        print ("prev_best_action",current_state,prev_best_action,h)
-        xf = explanation_features
-        aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0], xf[1]])
-        actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
-        actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
-
-
-        #explanation_features = choose_random_expln_features()
-        #
-        #if explanation_features[0] > 0.5:
-        #    number_of_exp += 1
-        #else:
-        #    number_of_no_exp +=1
-        #print (explanation_features)
-        #step_count += 1
-        # Get the human reward:
-        #h = puddy.get_human_reinf_from_prev_step(current_state, all_actions[current_act_ind], explanation_features)
-        #aux_y_train[y_train_name].append(h)
-
-        #print ("prev_best_action",current_state,prev_best_action,h)
-        #xf = explanation_features
-        #aux_X_train[X_train_name].append([current_state.x, current_state.y, xf[0]])
-        #actions_X_train[X_train_name] = np.array(aux_X_train[X_train_name])
-        #actions_y_train[y_train_name] = np.array(aux_y_train[y_train_name])
-
-
-        # If have a batch of data ready, train and predict from it
-        # Update the models if we are on a batch_size iteration
-        if i % batch_size == 0:
-            for poss_act in all_actions:
-                train_weights_file = weights_file_str.format(poss_act)
-                train_model_name = 'nn_model_{}'.format(poss_act)
-                train_X_name = 'X_train_{}'.format(poss_act)
-                train_y_name = 'y_train_{}'.format(poss_act)
-
-                curr_model = actions_models[train_model_name]
-
-                try:
-                    curr_model.load_weights(train_weights_file)
-                except:
-                    pass
-                print("----------------------------------")
-                print "IN ITERATION {}".format(i)
-                print("TRAINING {}".format(poss_act))
-                X_train = actions_X_train[train_X_name]
-                y_train = actions_y_train[train_y_name]
-                if len(X_train) > 0:
-                    curr_model.fit(X_train, y_train, nb_epoch=20, batch_size=2)
-                    curr_model.save_weights(train_weights_file)
-                else:
-                    print ("actions ",poss_act)
-
-        # Get the next state based on action (random for the moment)
-        new_state = puddy.get_next_state(current_state, all_actions[current_act_ind])
-
-        # This is the predict part
-        current_act_ind = epsilon_greedy(new_state, actions_models, all_actions, explanation_features, episode_number, step_count)
-        # print ("current action", all_actions[current_act_ind])
-        current_state = copy.deepcopy(new_state)
-
-        if current_state.is_terminal() or step_count >= EPISODE_LIMIT:
-            current_state = puddy.get_initial_state()
-            step_count = 0
-            episode_number +=1
-
-    elapsed_time = time.time() - start_time
-    print ("------------------------------------------------------------")
-    print (" Elapsed time to train: {}".format(elapsed_time))
-    print ("------------------------------------------------------------")
-    print ("No of explanation examples", number_of_exp)
-    print ("No of no explanation examples", number_of_no_exp)
    # ------------ EVAL --------------  #
     actions_models = load_trained_actions_models(all_actions)
-#    # -------------------------------- #
+   # -------------------------------- #
 
 #    explanation_features = [0]
 #    # Test the policy
@@ -268,9 +270,9 @@ def tamer_algorithm():
 #        curr_char = raw_input("")
 #
 #
-    explanation_features = [0,0,0]
+    explanation_features = [0,0]
     # Test the policy
-    current_state = puddy.get_initial_state()
+    current_state = puddy.set_state(0.2,0.2)
     print("Start from state", current_state)
     curr_char = "S"
     puddy.visualize_agent(current_state)
@@ -286,7 +288,7 @@ def tamer_algorithm():
 
 
 
-    explanation_features = [1,0,0]
+    explanation_features = [0,1]
     current_state = puddy.set_state(0.2,0.2)
     print("Best action from tamer",
           all_actions[get_best_action(current_state, actions_models, all_actions, explanation_features)])
@@ -302,7 +304,7 @@ def tamer_algorithm():
         puddy.visualize_agent(current_state)
         curr_char = raw_input("")
 
-    explanation_features = [0,1,0]
+    explanation_features = [1,0]
     current_state = puddy.set_state(0.2,0.2)
     print("Best action from tamer",
           all_actions[get_best_action(current_state, actions_models, all_actions, explanation_features)])
@@ -320,7 +322,7 @@ def tamer_algorithm():
 
 
 
-    explanation_features = [0,0,1]
+    explanation_features = [1,1]
     #current_state = puddy.get_initial_state()
     current_state = puddy.set_state(0.2,0.2)
     print("Best action from tamer",

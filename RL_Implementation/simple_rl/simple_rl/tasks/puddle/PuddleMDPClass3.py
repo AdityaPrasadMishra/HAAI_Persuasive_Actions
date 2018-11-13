@@ -19,7 +19,7 @@ from simple_rl.tasks.grid_world.GridWorldStateClass import GridWorldState
 class PuddleMDP3(GridWorldMDP):
     ''' Class for a Puddle MDP '''
 
-    def __init__(self, gamma=0.99, slip_prob=0.00, name="puddle", puddle_rects=[(0.4, 0.6, 0.9, 0.4)], goal_locs=[[1.0, 1.0]], is_goal_terminal=True, rand_init=False, step_cost=0.0):
+    def __init__(self, gamma=0.99, slip_prob=0.00, name="puddle", puddle_rects=[(0.4, 0.5, 0.6, 0.0)], goal_locs=[[1.0, 1.0]], is_goal_terminal=True, rand_init=False, step_cost=0.0):
         '''
         Args:
             gamma (float)
