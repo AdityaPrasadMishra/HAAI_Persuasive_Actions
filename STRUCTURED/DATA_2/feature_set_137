@@ -1,0 +1,6 @@
+0 1 1 1 0 1 0 0 1 1 1 1 fetch_box
+0 1 1 0 0 1 0 0 1 1 1 1 move_lefty
+0 0 1 0 0 1 0 0 1 1 1 1 unfetch_box
+0 0 0 0 0 1 0 0 1 1 1 1 move_righty
+0 1 0 0 0 1 0 0 1 1 1 1 move_topx
+1 1 0 0 0 1 0 0 1 1 1 1 waiting

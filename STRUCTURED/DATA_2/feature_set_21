@@ -1,0 +1,5 @@
+0 0 1 1 0 1 0 2 0 2 0 2 move_righty
+0 1 1 1 0 1 0 2 0 2 0 2 fetch_box
+0 1 1 0 0 1 0 2 0 2 0 2 move_righty
+0 2 1 0 0 1 0 2 0 2 0 2 unfetch_box
+0 2 0 0 0 1 0 2 0 2 0 2 waiting

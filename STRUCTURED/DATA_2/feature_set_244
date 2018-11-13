@@ -1,0 +1,4 @@
+0 2 1 1 0 1 0 0 3 3 3 3 move_lefty
+0 1 1 1 0 1 0 0 3 3 3 3 fetch_box
+0 1 1 0 0 1 0 0 3 3 3 3 move_lefty
+0 0 1 0 0 1 0 0 3 3 3 3 unfetch_box

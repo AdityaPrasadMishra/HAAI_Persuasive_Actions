@@ -1,0 +1,8 @@
+2 2 1 1 0 1 2 2 3 3 3 3 move_bottomx
+1 2 1 1 0 1 2 2 3 3 3 3 move_bottomx
+0 2 1 1 0 1 2 2 3 3 3 3 move_lefty
+0 1 1 1 0 1 2 2 3 3 3 3 fetch_box
+0 1 1 0 0 1 2 2 3 3 3 3 move_righty
+0 2 1 0 0 1 2 2 3 3 3 3 move_topx
+1 2 1 0 0 1 2 2 3 3 3 3 move_topx
+2 2 1 0 0 1 2 2 3 3 3 3 unfetch_box
