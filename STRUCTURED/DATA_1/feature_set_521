@@ -1,5 +1,7 @@
-2 2 2 2 2 2 3 3 0 0 move_topx_x0_y0_x1
-2 2 2 2 2 2 3 3 0 0 move_topx_x1_y0_x2
-2 2 2 2 2 2 3 3 0 0 fetch_box_x2_y0
-2 2 2 2 2 2 3 3 0 0 unfetch_box_x2_y0
-2 2 2 2 2 2 3 3 0 0 waiting_x0_y0
+1 1 1 1 2 0 0 0 2 0 2 0 move_lefty
+1 0 1 1 2 0 0 0 2 0 2 0 move_topx
+2 0 1 1 2 0 0 0 2 0 2 0 fetch_box
+2 0 1 0 2 0 0 0 2 0 2 0 move_bottomx
+1 0 1 0 2 0 0 0 2 0 2 0 move_bottomx
+0 0 1 0 2 0 0 0 2 0 2 0 unfetch_box
+0 0 0 0 2 0 0 0 2 0 2 0 waiting

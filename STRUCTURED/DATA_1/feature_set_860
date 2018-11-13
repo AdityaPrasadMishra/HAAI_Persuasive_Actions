@@ -1,7 +1,4 @@
-2 2 2 2 2 2 3 3 3 3 move_lefty_x0_y1_y0
-2 2 2 2 2 2 3 3 3 3 move_topx_x0_y0_x1
-2 2 2 2 2 2 3 3 3 3 fetch_box_x1_y0
-2 2 2 2 2 2 3 3 3 3 move_bottomx_x1_y0_x0
-2 2 2 2 2 2 3 3 3 3 move_righty_x0_y0_y1
-2 2 2 2 2 2 3 3 3 3 move_righty_x0_y1_y2
-2 2 2 2 2 2 3 3 3 3 unfetch_box_x0_y2
+2 1 1 1 2 1 1 2 3 3 3 3 fetch_box
+2 1 1 0 2 1 1 2 3 3 3 3 move_bottomx
+1 1 1 0 2 1 1 2 3 3 3 3 move_righty
+1 2 1 0 2 1 1 2 3 3 3 3 unfetch_box
