@@ -6,7 +6,13 @@ import os
 import re
 import subprocess
 from plan_executor import Executor
-
+from keras.models import Sequential, load_model,model_from_yaml
+from keras.layers import Dense, Activation, CuDNNLSTM
+from keras.optimizers import RMSprop, SGD
+import random
+import sys
+import numpy as np
+import time
 '''
 Method :: Astar Search
 '''
@@ -56,33 +62,34 @@ class SearchNode:
         return self.alpha * self.get_explicability_score(act)
 
     def get_explicability_score(self, act):
-        global GLOB_1
-        try:
-            print ("We are Here")
-            new_trace = self.get_new_trace(act)
-            #with open("feature_set_"+str(GLOB_1)+"_test", 'w') as out:
-            with open("feature_set_test", 'w') as out:
-                for nt in new_trace:
-                    out.write(nt + '\n')
-            HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src"
-            cmd =""
-            #cmd += 'java "/home/local/ASUAD/ssreedh3/exp_wsp/mallet-2.0.8RC2/class/:/home/local/ASUAD/ssreedh3/exp_wsp/mallet-2.0.8RC2/lib/mallet-deps.jar" cc.mallet.fst.SimpleTagger --model-file nouncrf feature_set_test |grep "Exp :"|wc -l'
-            cmd = 'java -cp  "/home/local/ASUAD/ssreedh3/exp_wsp/mallet-2.0.8RC2/class/:/home/local/ASUAD/ssreedh3/exp_wsp/mallet-2.0.8RC2/lib/mallet-deps.jar" cc.mallet.fst.SimpleTagger --model-file nouncrf feature_set_test |grep "UNEXP"|wc -l'
-            print ("cmd:",cmd)
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-            (out, err) = proc.communicate()
-            #outarr =str(out)#.split("Explicability Score :")[1].split("\\n")[0]
-            #print("EXP score :"+ str(outarr))        
-            #out = float(outarr.strip())
-            #GLOB_1+=1
-            return -1 * int(out) 
+        #try:
+        maxval = 15
+        START = 1000000000000000000000000000000000000000
+        STOP  = 1100000000000000000000000000000000000000
+        BLANK = 1110000000000000000000000000000000000000
+        print ("In Explicabilty Score")
+        new_trace = self.get_new_trace(act)
+        print(new_trace)
+        actual_trace = []
+        actual_trace.append(START)
+        for line in range(maxval):
+                if line < len(new_trace):
+                    actual_trace.append([[0]] +[list(map(int, x)) for x in new_trace[line]])
+                else:
+                    actual_trace.append(BLANK)
+        actual_trace.append(STOP)        
+        print(actual_trace)
+        print("trace_printed")
 
-        except Exception as e:
-            if hasattr(e, 'message'):
-                print(e.message)
-            else:
-                print(e)
-            return "An Error Occured."
+
+        return 1.0 
+
+       # except Exception as e:
+        #    if hasattr(e, 'message'):
+         #       print(e.message)
+          #  else:
+           #     print(e)
+            #return "An Error Occured."
 
         # TODO: Mishraji will fill this in 
 

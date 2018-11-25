@@ -188,7 +188,7 @@ class Executor:
             #if act.split('_')[0] == "move" or "fetch" in act:
             #    beh_trace.append(" ".join([str(i) for i in full_feats])+" "+ "_".join(act.split('_')[:2]))
             #else:
-            beh_trace.append("".join([str(i) for i in full_feats])+""+ format(action_types.index(act.split(' ')[0]), '03b')+" "+self.label_seq[l_id])
+            beh_trace.append("".join([str(i) for i in full_feats])+""+ format(action_types.index(act.split(' ')[0]), '03b'))
 
             l_id += 1
             new_state = (new_state | adds) - dels
