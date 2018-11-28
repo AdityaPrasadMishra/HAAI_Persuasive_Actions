@@ -6,7 +6,13 @@ import os
 import re
 import subprocess
 from plan_executor import Executor
-
+from keras.models import Sequential, load_model,model_from_yaml
+from keras.layers import Dense, Activation, LSTM, CuDNNLSTM
+from keras.optimizers import RMSprop, SGD
+import random
+import sys
+import numpy as np
+import time
 '''
 Method :: Astar Search
 '''
@@ -55,36 +61,64 @@ class SearchNode:
         print (score)
         return self.alpha * self.get_explicability_score(act)
 
+    def get_learned_model(self):
+        model = Sequential()
+        model.add(LSTM(128,input_shape=(28, 40), return_sequences=True))
+        model.add(LSTM(128, return_sequences=True))
+        model.add(Dense(5))
+        model.add(Activation('softmax'))
+        #print(model.summary())
+        return model
+
     def get_explicability_score(self, act):
-        global GLOB_1
-        try:
-            print ("We are Here")
-            new_trace = self.get_new_trace(act)
-            #with open("feature_set_"+str(GLOB_1)+"_test", 'w') as out:
-            with open("feature_set_test", 'w') as out:
-                for nt in new_trace:
-                    out.write(nt + '\n')
-            HAAISearchLocation = "/home/local/ASUAD/amishr28/HAAI_Persuasive_Actions/CRF_Implementation/Explanation_Generator/src"
-            cmd =""
-            #cmd += 'java "/home/local/ASUAD/ssreedh3/exp_wsp/mallet-2.0.8RC2/class/:/home/local/ASUAD/ssreedh3/exp_wsp/mallet-2.0.8RC2/lib/mallet-deps.jar" cc.mallet.fst.SimpleTagger --model-file nouncrf feature_set_test |grep "Exp :"|wc -l'
-            cmd = 'java -cp  "/home/local/ASUAD/ssreedh3/exp_wsp/mallet-2.0.8RC2/class/:/home/local/ASUAD/ssreedh3/exp_wsp/mallet-2.0.8RC2/lib/mallet-deps.jar" cc.mallet.fst.SimpleTagger --model-file nouncrf feature_set_test |grep "UNEXP"|wc -l'
-            print ("cmd:",cmd)
-            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-            (out, err) = proc.communicate()
-            #outarr =str(out)#.split("Explicability Score :")[1].split("\\n")[0]
-            #print("EXP score :"+ str(outarr))        
-            #out = float(outarr.strip())
-            #GLOB_1+=1
-            return -1 * int(out) 
-
-        except Exception as e:
-            if hasattr(e, 'message'):
-                print(e.message)
-            else:
-                print(e)
-            return "An Error Occured."
-
-        # TODO: Mishraji will fill this in 
+        #try:
+        maxval = 26
+        maxvalwithss = 28
+        nooffeatures = 40
+        vocabdict= {'BLANK': 4, 'EXP': 1, 'START': 0, 'STOP': 3, 'UNEXP': 2}
+        revevocabdict = {}
+        for it in vocabdict:
+            revevocabdict[vocabdict[it]] = it
+        #print(revevocabdict)
+        model = self.get_learned_model()
+        model.load_weights("Sequential_Labels_DNNLSTM_55.h5")
+        START = "1000000000000000000000000000000000000000"
+        STOP  = "1100000000000000000000000000000000000000"
+        BLANK = "1110000000000000000000000000000000000000"
+        START = [list(map(int, x)) for x in START]
+        STOP = [list(map(int, x)) for x in STOP]
+        BLANK = [list(map(int, x)) for x in BLANK]
+        print ("In Explicabilty Score")
+        new_trace = self.get_new_trace(act)
+        print(new_trace)
+        actual_trace = []
+        actual_trace.append(START)
+        for line in range(maxval):
+                if line < len(new_trace):
+                    actual_trace.append([[0]] +[list(map(int, x)) for x in new_trace[line]])
+                else:
+                    actual_trace.append(BLANK)
+        actual_trace.append(STOP) 
+        actual_trace = np.array(actual_trace)
+        print(np.shape(actual_trace))
+        actual_trace = actual_trace.reshape(1,maxvalwithss,nooffeatures)
+        #print(actual_trace)
+        #print(np.shape(actual_trace))
+        print("trace_printed")
+        unexpcount =0
+        resultss = model.predict(actual_trace)
+        for results in resultss:
+            labelarray = []
+            for res in results:
+                maxi = np.max(res)
+                labelarray.append(np.where(res == maxi)[0])
+                if np.where(res == maxi)[0] == vocabdict['UNEXP']:
+                    unexpcount+=1
+            print(labelarray)
+        expscore = 1 - (float(unexpcount)/float((len(new_trace))))
+        
+        print("Explicibality Score : " + str(expscore))
+        return  expscore
 
 
 

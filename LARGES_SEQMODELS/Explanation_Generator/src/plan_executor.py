@@ -150,9 +150,9 @@ class Executor:
             precs = self.grounded_robot_model_map['domain'][act]['precondition_pos']
             adds = self.grounded_robot_model_map['domain'][act]['effect_pos']
             dels = self.grounded_robot_model_map['domain'][act]['effect_neg']
-            print (current_state)
-            print ("adds",adds)
-            print ("dels",dels)
+            #print (current_state)
+            #print ("adds",adds)
+            #print ("dels",dels)
             new_state = copy.deepcopy(current_state)
             currentx_feat_found = False
             currentx_feat = None
@@ -182,9 +182,9 @@ class Executor:
                 #print ("fetched box is missing")
                 curr_feats.append(format(1, '03b'))
 
-            print (curr_feats)
+            #print (curr_feats)
             full_feats = curr_feats + box_feats + goal_feats + explain_feats
-            print (full_feats)
+            #print (full_feats)
             #if act.split('_')[0] == "move" or "fetch" in act:
             #    beh_trace.append(" ".join([str(i) for i in full_feats])+" "+ "_".join(act.split('_')[:2]))
             #else:
@@ -192,7 +192,7 @@ class Executor:
 
             l_id += 1
             new_state = (new_state | adds) - dels
-            print (new_state)
+            #print (new_state)
             current_state = copy.deepcopy(new_state)
 
         return beh_trace

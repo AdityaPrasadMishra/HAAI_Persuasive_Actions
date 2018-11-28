@@ -7,7 +7,7 @@ import re
 import subprocess
 from plan_executor import Executor
 from keras.models import Sequential, load_model,model_from_yaml
-from keras.layers import Dense, Activation, CuDNNLSTM
+from keras.layers import Dense, Activation, LSTM, CuDNNLSTM
 from keras.optimizers import RMSprop, SGD
 import random
 import sys
@@ -60,13 +60,39 @@ class SearchNode:
         score = self.get_explicability_score(act)
         print (score)
         return self.alpha * self.get_explicability_score(act)
+    def get_learned_model(self):
+        model = Sequential()
+        model.add(LSTM(128,input_shape=(17, 40), return_sequences=True))
+        model.add(LSTM(128, return_sequences=True))
+        model.add(Dense(7))
+        model.add(Activation('softmax'))
+        #print(model.summary())
+        return model
 
     def get_explicability_score(self, act):
         #try:
         maxval = 15
-        START = 1000000000000000000000000000000000000000
-        STOP  = 1100000000000000000000000000000000000000
-        BLANK = 1110000000000000000000000000000000000000
+        maxvalwithss = 17
+        nooffeatures = 40
+        vocabdict= {'BLANK': 6,
+        'FETCHBOX': 3,
+        'OBSERVE': 5,
+        'START': 4,
+        'STOP': 1,
+        'UNEXP': 0,
+        'UNFETCH': 2}
+        revevocabdict = {}
+        for it in vocabdict:
+            revevocabdict[vocabdict[it]] = it
+        #print(revevocabdict)
+        model = self.get_learned_model()
+        model.load_weights("Sequential_Labels.h5")
+        START = "1000000000000000000000000000000000000000"
+        STOP  = "1100000000000000000000000000000000000000"
+        BLANK = "1110000000000000000000000000000000000000"
+        START = [list(map(int, x)) for x in START]
+        STOP = [list(map(int, x)) for x in STOP]
+        BLANK = [list(map(int, x)) for x in BLANK]
         print ("In Explicabilty Score")
         new_trace = self.get_new_trace(act)
         print(new_trace)
@@ -77,12 +103,27 @@ class SearchNode:
                     actual_trace.append([[0]] +[list(map(int, x)) for x in new_trace[line]])
                 else:
                     actual_trace.append(BLANK)
-        actual_trace.append(STOP)        
-        print(actual_trace)
+        actual_trace.append(STOP) 
+        actual_trace = np.array(actual_trace)
+        print(np.shape(actual_trace))
+        actual_trace = actual_trace.reshape(1,maxvalwithss,nooffeatures)
+        #print(actual_trace)
+        print(np.shape(actual_trace))
         print("trace_printed")
-
-
-        return 1.0 
+        unexpcount =0
+        resultss = model.predict(actual_trace)
+        for results in resultss:
+            labelarray = []
+            for res in results:
+                maxi = np.max(res)
+                labelarray.append(np.where(res == maxi)[0])
+                if np.where(res == maxi)[0] == vocabdict['UNEXP']:
+                    unexpcount+=1
+            print(labelarray)
+        expscore = 1 - (float(unexpcount)/float((len(new_trace))))
+        
+        print("Explicibality Score : " + str(expscore))
+        return  expscore
 
        # except Exception as e:
         #    if hasattr(e, 'message'):
