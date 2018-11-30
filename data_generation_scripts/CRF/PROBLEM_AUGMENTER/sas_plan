@@ -1,0 +1,4 @@
+(fetch_box x2 y2)
+(unfetch_box x2 y2)
+(waiting x2 y2)
+; cost = 3 (unit cost)
