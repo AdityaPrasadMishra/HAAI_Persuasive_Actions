@@ -1,0 +1,4 @@
+move_bottomx x2 y0 x1 
+fetch_box x1 y0 
+unfetch_box x1 y0 
+waiting x1 y0 

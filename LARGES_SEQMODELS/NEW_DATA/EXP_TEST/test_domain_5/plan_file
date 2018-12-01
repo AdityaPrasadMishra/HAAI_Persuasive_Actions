@@ -1,0 +1,11 @@
+move_bottomx x3 y3 x2 
+move_bottomx x2 y3 x1 
+move_bottomx x1 y3 x0 
+move_righty x0 y3 y4 
+fetch_box x0 y4 
+move_lefty x0 y4 y3 
+unfetch_box x0 y3 
+move_topx x0 y3 x1 
+move_lefty x1 y3 y2 
+move_topx x1 y2 x2 
+waiting x2 y2 
