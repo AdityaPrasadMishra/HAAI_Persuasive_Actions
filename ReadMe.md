@@ -1,3 +1,4 @@
 ### Project for CSE 591 - Human Aware AI
 
-## Aim - To test if persuasion works as proper explanation for humans. 
+## Aim - Explaining MDP Policies in the Absence of Human Models
+There has been a lot of interest from AI research community to develop methods that enable AI agents to explain their decisions to humans in the loop. A recent development in this direction has been the formulation of explanations as model reconciliation as a way to allow agents to help humans better understand the details of the model used by the agent in coming up with decisions and thereby allowing the human to evaluate the decisions/plans in question correctly. Unfortunately, one of the main challenges of utilizing such explanations is the need to have access to the human model. In this work, we try to tackle the problem of generating explanation as model reconciliation for planning tasks modeled as MDPs where the human model is initially unknown.
